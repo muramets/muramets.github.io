@@ -1,0 +1,10 @@
+{
+  "name": "cv-portfolio",
+  "version": "1.0.0",
+  "description": "Ilia Blinov's CV Portfolio website in The Verge design language",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8000",
+    "check": "echo 'No compilation or lint errors for static website prototype.'"
+  }
+}
