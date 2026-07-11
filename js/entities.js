@@ -38,9 +38,11 @@ function renderCard(entity) {
 
 const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-warm'];
 
-/* The Verge depth scale (docs/DESIGN.md §Depth): the further a role sits
-   from the first one, the deeper the elevation level of its card. */
-const ROLE_DEPTHS = ['depth-2', 'depth-3', 'depth-4', 'depth-5', 'depth-6', 'depth-7'];
+/* The Verge depth scale (docs/DESIGN.md §Depth), loudest first: the
+   newest role gets the saturated mint fill (level 7) and each older
+   role steps down the scale — 6 gray + inset underline, 5 ring,
+   4 UV outline, 3 mint outline, 2 hairline for everything older. */
+const ROLE_DEPTHS = ['depth-7', 'depth-6', 'depth-5', 'depth-4', 'depth-3', 'depth-2'];
 
 export const ENTITY_TYPES = {
 
