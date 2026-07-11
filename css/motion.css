@@ -1,0 +1,45 @@
+/* Cross-document page transitions — native View Transitions API.
+   GPU-composited (60fps), zero JS. Non-supporting browsers navigate
+   instantly — progressive enhancement. */
+
+@view-transition {
+  navigation: auto;
+}
+
+/* Shared chrome morphs geometry between pages: the header band glides
+   between its color/height states, nav and footer stay anchored.
+   Page titles intentionally do NOT share a name — a full-scale wordmark
+   morphing into a section title reads as a violent zoom, not premium. */
+.site-header { view-transition-name: site-header; }
+.vnav        { view-transition-name: site-nav; }
+.footer      { view-transition-name: site-footer; }
+
+::view-transition-group(*) {
+  animation-duration: 300ms;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Content: quiet fade-out, incoming page fades in with a subtle lift */
+::view-transition-old(root) {
+  animation: vt-fade-out 200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+::view-transition-new(root) {
+  animation: vt-fade-up 340ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Header band: geometry morph only, crossfade kept tight to avoid ghosting */
+::view-transition-old(site-header) { animation-duration: 200ms; }
+::view-transition-new(site-header) { animation-duration: 260ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+}
