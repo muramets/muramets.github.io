@@ -1,9 +1,9 @@
 // Rendering: data → DOM. Pure output, no admin chrome — admin.js decorates
 // rendered entities separately when admin mode is on.
 
-import { ENTITY_TYPES } from './entities.js';
-import { store } from './store.js';
-import { SEED } from './content.js';
+import { ENTITY_TYPES } from './entities.js?v=4';
+import { store } from './store.js?v=4';
+import { SEED } from './content.js?v=4';
 
 /** Resolve current items for a collection: local override or seed. */
 export function getItems(name) {
@@ -41,9 +41,9 @@ export function renderPage() {
   return state;
 }
 
-/** Apply saved singleton texts to [data-text-id] elements. */
+/** Apply saved singleton texts to [data-text-id] elements (page-scoped). */
 export function applyTexts() {
-  const texts = store.loadTexts();
+  const texts = store.loadTexts(location.pathname);
   document.querySelectorAll('[data-text-id]').forEach(node => {
     const saved = texts[node.dataset.textId];
     if (saved !== undefined) node.innerHTML = saved;

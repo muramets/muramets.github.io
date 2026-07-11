@@ -1,11 +1,11 @@
 // Admin mode: inline editing, add/delete entities, toolbar.
 // Initialized ONLY when auth.isAdmin() — public visitors never load this UI.
 
-import { ENTITY_TYPES } from './entities.js';
-import { store } from './store.js';
-import { renderCollection } from './render.js';
-import { logout } from './auth.js';
-import { makeSortable, createHandle } from './dnd.js';
+import { ENTITY_TYPES } from './entities.js?v=4';
+import { store } from './store.js?v=4';
+import { renderCollection } from './render.js?v=4';
+import { logout } from './auth.js?v=4';
+import { makeSortable, createHandle } from './dnd.js?v=4';
 
 let pageState = null; // { name: { container, items } }
 
@@ -39,9 +39,10 @@ function commitField(node) {
 }
 
 function commitText(node) {
-  const texts = store.loadTexts();
+  const page = location.pathname;
+  const texts = store.loadTexts(page);
   texts[node.dataset.textId] = node.innerHTML;
-  store.saveTexts(texts);
+  store.saveTexts(page, texts);
 }
 
 function startEditing(node) {

@@ -20,15 +20,16 @@ export const store = {
     localStorage.setItem(key('col', name), JSON.stringify(items));
   },
 
-  /** @returns {Object} map of textId -> html for singleton editable texts */
-  loadTexts() {
-    const raw = localStorage.getItem(key('map', 'texts'));
+  /** Singleton texts are scoped per page — every page owns its footer,
+      titles, etc. @returns {Object} map of textId -> html */
+  loadTexts(page) {
+    const raw = localStorage.getItem(key('texts', page));
     if (!raw) return {};
     try { return JSON.parse(raw) || {}; } catch { return {}; }
   },
 
-  saveTexts(map) {
-    localStorage.setItem(key('map', 'texts'), JSON.stringify(map));
+  saveTexts(page, map) {
+    localStorage.setItem(key('texts', page), JSON.stringify(map));
   },
 
   /** @returns {string[]|null} saved block order for a page, or null */
