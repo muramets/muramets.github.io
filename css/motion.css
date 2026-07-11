@@ -6,13 +6,17 @@
   navigation: auto;
 }
 
-/* Shared chrome morphs geometry between pages: the header band glides
-   between its color/height states, nav and footer stay anchored.
-   Page titles intentionally do NOT share a name — a full-scale wordmark
-   morphing into a section title reads as a violent zoom, not premium. */
-.site-header { view-transition-name: site-header; }
-.vnav        { view-transition-name: site-nav; }
-.footer      { view-transition-name: site-footer; }
+/* Shared chrome morphs geometry between pages: colored band headers glide
+   between color states, nav and footer stay anchored.
+   Two deliberate exclusions:
+   - page titles don't share a name (wordmark→title morph = violent zoom);
+   - About's tall masthead doesn't share the header name — morphing a low
+     band into a ~600px hero reads as a jump, so About's header travels
+     with the root fade instead. Band↔band still morphs (same height,
+     color glides). */
+.site-header--band { view-transition-name: site-header; }
+.vnav              { view-transition-name: site-nav; }
+.footer            { view-transition-name: site-footer; }
 
 ::view-transition-group(*) {
   animation-duration: 300ms;
@@ -32,7 +36,7 @@
 }
 
 @keyframes vt-fade-up {
-  from { opacity: 0; transform: translateY(16px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: none; }
 }
 
