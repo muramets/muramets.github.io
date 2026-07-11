@@ -302,6 +302,18 @@
 
 .footer-col a:hover { opacity: 1; color: var(--jelly-mint); }
 
+/* Pill tag inside the footer — keep the design-system spec:
+   mint fill, black text, full opacity (footer link styles must not bleed in) */
+.footer-col a.btn-tag {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--absolute-black);
+  opacity: 1;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.footer-col a.btn-tag:hover { color: var(--absolute-black); background: rgba(60, 255, 208, 0.75); }
+
 .footer-credit {
   margin-top: 48px;
   padding-top: 24px;

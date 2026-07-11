@@ -1,16 +1,74 @@
 // Admin mode: inline editing, add/delete entities, toolbar.
 // Initialized ONLY when auth.isAdmin() — public visitors never load this UI.
 
-import { ENTITY_TYPES } from './entities.js?v=4';
-import { store } from './store.js?v=4';
-import { renderCollection } from './render.js?v=4';
-import { logout } from './auth.js?v=4';
-import { makeSortable, createHandle } from './dnd.js?v=4';
+import { ENTITY_TYPES } from './entities.js?v=5';
+import { store } from './store.js?v=5';
+import { renderCollection } from './render.js?v=5';
+import { logout } from './auth.js?v=5';
+import { makeSortable, createHandle } from './dnd.js?v=5';
 
 let pageState = null; // { name: { container, items } }
 
 function findEntity(name, id) {
   return pageState[name].items.find(e => e.id === id);
+}
+
+/* ── Undo (Cmd/Ctrl+Z) ─────────────────────────────────────── */
+
+const undoStack = [];
+const UNDO_LIMIT = 50;
+
+function pushUndo(entry) {
+  undoStack.push(entry);
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+}
+
+function snapshotCollection(name) {
+  pushUndo({ kind: 'collection', name, items: structuredClone(pageState[name].items) });
+}
+
+function undo() {
+  const entry = undoStack.pop();
+  if (!entry) return;
+
+  if (entry.kind === 'collection') {
+    pageState[entry.name].items = entry.items;
+    store.saveCollection(entry.name, entry.items);
+    rerender(entry.name);
+
+  } else if (entry.kind === 'text') {
+    const page = location.pathname;
+    const texts = store.loadTexts(page);
+    texts[entry.textId] = entry.prevHtml;
+    store.saveTexts(page, texts);
+    const node = document.querySelector(`[data-text-id="${CSS.escape(entry.textId)}"]`);
+    if (node) node.innerHTML = entry.prevHtml;
+
+  } else if (entry.kind === 'blocks') {
+    store.saveBlockOrder(location.pathname, entry.order);
+    applyBlockOrderDom(entry.order);
+    lastBlockOrder = entry.order;
+  }
+}
+
+function applyBlockOrderDom(ids) {
+  const blocks = [...document.querySelectorAll('[data-block-id]')];
+  if (blocks.length < 2) return;
+  const byId = new Map(blocks.map(b => [b.dataset.blockId, b]));
+  const anchor = blocks[blocks.length - 1].nextSibling;
+  const parent = blocks[0].parentNode;
+  ids.forEach(id => {
+    const block = byId.get(id);
+    if (block) parent.insertBefore(block, anchor);
+  });
+}
+
+function onUndoKey(e) {
+  if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z' || e.shiftKey) return;
+  if (!document.body.classList.contains('is-admin')) return;
+  if (document.activeElement?.isContentEditable) return; // native undo while typing
+  e.preventDefault();
+  undo();
 }
 
 function collectionOf(node) {
@@ -29,16 +87,24 @@ function commitField(node) {
   const entity = findEntity(name, entityId);
   if (!entity) return;
 
-  if (field.startsWith('bullets.')) {
-    const i = Number(field.split('.')[1]);
-    entity.fields.bullets[i] = node.innerHTML;
+  const isBullet = field.startsWith('bullets.');
+  const prev = isBullet
+    ? entity.fields.bullets[Number(field.split('.')[1])]
+    : entity.fields[field];
+  if (prev === node.innerHTML) return; // nothing changed
+
+  snapshotCollection(name);
+  if (isBullet) {
+    entity.fields.bullets[Number(field.split('.')[1])] = node.innerHTML;
   } else {
     entity.fields[field] = node.innerHTML;
   }
   store.saveCollection(name, pageState[name].items);
 }
 
-function commitText(node) {
+function commitText(node, prevHtml) {
+  if (prevHtml === node.innerHTML) return; // nothing changed
+  pushUndo({ kind: 'text', textId: node.dataset.textId, prevHtml });
   const page = location.pathname;
   const texts = store.loadTexts(page);
   texts[node.dataset.textId] = node.innerHTML;
@@ -46,6 +112,7 @@ function commitText(node) {
 }
 
 function startEditing(node) {
+  const prevHtml = node.innerHTML; // for undo of text edits
   node.contentEditable = 'true';
   node.focus();
 
@@ -54,7 +121,7 @@ function startEditing(node) {
     node.removeEventListener('blur', stop);
     node.removeEventListener('keydown', onKey);
     if (node.dataset.field !== undefined) commitField(node);
-    else if (node.dataset.textId !== undefined) commitText(node);
+    else if (node.dataset.textId !== undefined) commitText(node, prevHtml);
   };
   const onKey = ev => { if (ev.key === 'Escape') node.blur(); };
 
@@ -102,15 +169,19 @@ function commitEntityOrder(name) {
   const state = pageState[name];
   const domOrder = [...state.container.querySelectorAll('[data-entity-id]')]
     .map(node => node.dataset.entityId);
+  snapshotCollection(name);
   state.items.sort((a, b) => domOrder.indexOf(a.id) - domOrder.indexOf(b.id));
   store.saveCollection(name, state.items);
   rerender(name); // re-render so index-based styling (role accents) follows
 }
 
 /* Whole page blocks ([data-block-id]) are sortable too. */
+let lastBlockOrder = null;
+
 function initBlockSorting() {
   const blocks = [...document.querySelectorAll('[data-block-id]')];
   if (blocks.length < 2) return;
+  lastBlockOrder = blocks.map(b => b.dataset.blockId);
   blocks.forEach(block => block.append(createHandle('Drag to move block')));
   makeSortable({
     container: blocks[0].parentNode,
@@ -118,12 +189,15 @@ function initBlockSorting() {
     onReorder() {
       const ids = [...document.querySelectorAll('[data-block-id]')]
         .map(b => b.dataset.blockId);
+      pushUndo({ kind: 'blocks', order: lastBlockOrder });
+      lastBlockOrder = ids;
       store.saveBlockOrder(location.pathname, ids);
     },
   });
 }
 
 function deleteEntity(name, id) {
+  snapshotCollection(name);
   const state = pageState[name];
   state.items = state.items.filter(e => e.id !== id);
   store.saveCollection(name, state.items);
@@ -135,6 +209,7 @@ function addEntity(name) {
   const type = state.container.dataset.entityType;
   const blank = ENTITY_TYPES[type]?.blank();
   if (!blank) return;
+  snapshotCollection(name);
   state.items.push(blank);
   store.saveCollection(name, state.items);
   rerender(name);
@@ -202,6 +277,7 @@ export function initAdmin(state) {
   document.body.classList.add('admin-authed');
   document.addEventListener('dblclick', onDblClick);
   document.addEventListener('click', onClickGuard, true);
+  document.addEventListener('keydown', onUndoKey);
   Object.keys(pageState).forEach(name => {
     decorateEntities(name);
     makeSortable({
