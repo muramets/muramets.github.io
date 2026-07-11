@@ -1,0 +1,53 @@
+/* Design tokens — source: docs/DESIGN.md
+   Values extracted live from getdesign.md/theverge Live Preview (Light theme).
+   Variable names match the official preview exactly. */
+
+:root {
+  /* Surfaces */
+  --canvas:          #ffffff;
+  --canvas-inverted: #131313;
+  --surface-slate:   #f2f2f2;
+  --surface-slate-2: #e6e6e6;
+  --image-frame:     #d4d4d4;
+  --hazard-white:    #ffffff;
+  --absolute-black:  #000000;
+
+  /* Accents */
+  --jelly-mint:          #3cffd0;
+  --verge-ultraviolet:   #5200ff;
+  --console-mint-border: #309875;
+  --deep-link-blue:      #3860be;
+  --focus-cyan:          #1eaedb;
+  --purple-rule:         #3d00bf;
+  --dim-gray:            #8c8c8c;
+  --accent-warm:         #ff6b2b;
+
+  /* Text */
+  --primary-text:   #131313;
+  --secondary-text: #6a6a6a;
+  --muted-text:     #8c8c8c;
+  --inverted-text:  #ffffff;
+
+  /* Hairlines (light theme) */
+  --hairline:      #e9e9e9;
+  --hairline-dark: rgba(0, 0, 0, 0.18);
+
+  /* Typography — free substitutes for Manuka / PolySans / PolySans Mono / FK Roman */
+  --font-display: 'Anton', Impact, Helvetica, sans-serif;
+  --font-sans:    'Space Grotesk', Helvetica, Arial, sans-serif;
+  --font-mono:    'Space Mono', 'Courier New', Courier, monospace;
+  --font-serif:   'Newsreader', Georgia, serif;
+
+  /* Radii scale (getdesign §5) */
+  --radius-input:         2px;
+  --radius-image:         4px;
+  --radius-tile:          20px;
+  --radius-tile-featured: 24px;
+  --radius-pill:          24px;
+  --radius-pill-promo:    30px;
+  --radius-pill-outline:  40px;
+
+  /* Layout */
+  --container: 1280px;
+  --gutter:    48px;
+}

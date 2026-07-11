@@ -1,0 +1,181 @@
+// Admin mode: inline editing, add/delete entities, toolbar.
+// Initialized ONLY when auth.isAdmin() — public visitors never load this UI.
+
+import { ENTITY_TYPES } from './entities.js';
+import { store } from './store.js';
+import { renderCollection } from './render.js';
+import { logout } from './auth.js';
+
+let pageState = null; // { name: { container, items } }
+
+function findEntity(name, id) {
+  return pageState[name].items.find(e => e.id === id);
+}
+
+function collectionOf(node) {
+  const container = node.closest('[data-collection]');
+  return container ? container.dataset.collection : null;
+}
+
+/* ── Field editing ─────────────────────────────────────────── */
+
+function commitField(node) {
+  const name = collectionOf(node);
+  const entityId = node.closest('[data-entity-id]')?.dataset.entityId;
+  const field = node.dataset.field;
+  if (!name || !entityId || !field) return;
+
+  const entity = findEntity(name, entityId);
+  if (!entity) return;
+
+  if (field.startsWith('bullets.')) {
+    const i = Number(field.split('.')[1]);
+    entity.fields.bullets[i] = node.innerHTML;
+  } else {
+    entity.fields[field] = node.innerHTML;
+  }
+  store.saveCollection(name, pageState[name].items);
+}
+
+function commitText(node) {
+  const texts = store.loadTexts();
+  texts[node.dataset.textId] = node.innerHTML;
+  store.saveTexts(texts);
+}
+
+function startEditing(node) {
+  node.contentEditable = 'true';
+  node.focus();
+
+  const stop = () => {
+    node.contentEditable = 'false';
+    node.removeEventListener('blur', stop);
+    node.removeEventListener('keydown', onKey);
+    if (node.dataset.field !== undefined) commitField(node);
+    else if (node.dataset.textId !== undefined) commitText(node);
+  };
+  const onKey = ev => { if (ev.key === 'Escape') node.blur(); };
+
+  node.addEventListener('blur', stop);
+  node.addEventListener('keydown', onKey);
+}
+
+function onDblClick(e) {
+  if (!document.body.classList.contains('is-admin')) return;
+  const target = e.target.closest('[data-field], [data-text-id]');
+  if (!target || target.isContentEditable) return;
+  e.preventDefault();
+  startEditing(target);
+}
+
+/* While editing is on, single clicks on editable links/buttons must not
+   navigate or submit — otherwise double-click editing is impossible on them. */
+function onClickGuard(e) {
+  if (!document.body.classList.contains('is-admin')) return;
+  if (e.target.closest('a[data-text-id], button[data-text-id]')) {
+    e.preventDefault();
+  }
+}
+
+/* ── Entity add / delete ───────────────────────────────────── */
+
+function decorateEntities(name) {
+  const { container } = pageState[name];
+  container.querySelectorAll('[data-entity-id]').forEach(node => {
+    if (node.querySelector(':scope > .entity-delete')) return;
+    const btn = document.createElement('button');
+    btn.className = 'entity-delete';
+    btn.setAttribute('aria-label', 'Delete');
+    btn.textContent = '×';
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      deleteEntity(name, node.dataset.entityId);
+    });
+    node.append(btn);
+  });
+}
+
+function deleteEntity(name, id) {
+  const state = pageState[name];
+  state.items = state.items.filter(e => e.id !== id);
+  store.saveCollection(name, state.items);
+  rerender(name);
+}
+
+function addEntity(name) {
+  const state = pageState[name];
+  const type = state.container.dataset.entityType;
+  const blank = ENTITY_TYPES[type]?.blank();
+  if (!blank) return;
+  state.items.push(blank);
+  store.saveCollection(name, state.items);
+  rerender(name);
+}
+
+function rerender(name) {
+  const state = pageState[name];
+  renderCollection(state.container, state.items);
+  decorateEntities(name);
+}
+
+function injectAddButtons() {
+  Object.entries(pageState).forEach(([name, { container }]) => {
+    const label = container.dataset.addLabel || '+ Add item';
+    const btn = document.createElement('button');
+    btn.className = 'entity-add';
+    btn.textContent = label;
+    btn.addEventListener('click', () => addEntity(name));
+    container.after(btn);
+  });
+}
+
+/* ── Toolbar ───────────────────────────────────────────────── */
+
+const EDITING_KEY = 'cv.v1.editing';
+
+function isEditing() {
+  return localStorage.getItem(EDITING_KEY) !== '0';
+}
+
+function setEditing(on) {
+  localStorage.setItem(EDITING_KEY, on ? '1' : '0');
+  document.body.classList.toggle('is-admin', on);
+  const btn = document.querySelector('.admin-toggle');
+  if (btn) {
+    btn.textContent = on ? 'Editing: On' : 'Editing: Off';
+    btn.classList.toggle('is-on', on);
+  }
+  document.querySelector('.admin-toolbar')?.classList.toggle('is-collapsed', !on);
+}
+
+function injectToolbar() {
+  const bar = document.createElement('div');
+  bar.className = 'admin-toolbar';
+  bar.innerHTML = `
+    <span class="admin-dot"></span>
+    <span>Admin</span>
+    <button class="admin-toggle" title="Toggle edit mode on/off"></button>
+    <button class="admin-reset" title="Discard local edits, restore seed content">Reset</button>
+    <button class="admin-exit" title="Leave admin entirely (return via ?admin=on)">Log out</button>
+  `;
+  bar.querySelector('.admin-toggle').addEventListener('click', () => setEditing(!isEditing()));
+  bar.querySelector('.admin-reset').addEventListener('click', () => {
+    store.resetAll();
+    location.reload();
+  });
+  bar.querySelector('.admin-exit').addEventListener('click', logout);
+  document.body.append(bar);
+}
+
+/* ── Entry point ───────────────────────────────────────────── */
+
+export function initAdmin(state) {
+  pageState = state;
+  document.body.classList.add('admin-authed');
+  document.addEventListener('dblclick', onDblClick);
+  document.addEventListener('click', onClickGuard, true);
+  Object.keys(pageState).forEach(decorateEntities);
+  injectAddButtons();
+  injectToolbar();
+  setEditing(isEditing());
+}

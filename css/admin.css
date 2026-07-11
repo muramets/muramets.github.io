@@ -1,0 +1,135 @@
+/* Admin-mode UI. Every rule is gated behind body.is-admin —
+   public visitors get zero edit affordances. */
+
+/* Editing highlight */
+.is-admin [contenteditable="true"] {
+  outline: 1.5px solid var(--verge-ultraviolet);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Editable hint on hover */
+.is-admin [data-field]:hover,
+.is-admin [data-text-id]:hover {
+  outline: 1px dashed rgba(82, 0, 255, 0.35);
+  outline-offset: 2px;
+  border-radius: 2px;
+  cursor: text;
+}
+
+/* Editing off: no text cursor over editable content */
+.admin-authed:not(.is-admin) [data-field],
+.admin-authed:not(.is-admin) [data-text-id] {
+  cursor: default;
+}
+
+/* Delete button on entity hover */
+.entity-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 150ms ease, background 150ms ease;
+  z-index: 10;
+}
+
+.is-admin .story-tile:hover .entity-delete,
+.is-admin .timeline-item:hover .entity-delete { opacity: 1; }
+
+.entity-delete:hover { background: #d00; }
+
+.timeline-item { position: relative; }
+
+/* Add-entity button under a collection */
+.entity-add {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1.5px dashed var(--hairline-dark);
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--secondary-text);
+  transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+}
+.is-admin .entity-add { display: flex; }
+
+.entity-add:hover {
+  border-color: var(--verge-ultraviolet);
+  color: var(--verge-ultraviolet);
+  background: rgba(82, 0, 255, 0.04);
+}
+
+/* Admin toolbar — fixed bottom-right */
+.admin-toolbar {
+  display: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  align-items: center;
+  gap: 10px;
+  background: var(--canvas-inverted);
+  color: var(--inverted-text);
+  border-radius: var(--radius-pill);
+  padding: 8px 10px 8px 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+.admin-authed .admin-toolbar { display: flex; }
+
+.admin-toolbar .admin-toggle { opacity: 0.6; }
+.admin-toolbar .admin-toggle.is-on {
+  opacity: 1;
+  color: var(--jelly-mint);
+}
+
+/* Editing off → toolbar collapses to a dot; hover expands it */
+.admin-toolbar.is-collapsed:not(:hover) {
+  padding: 10px;
+  gap: 0;
+}
+.admin-toolbar.is-collapsed:not(:hover) > :not(.admin-dot) {
+  display: none;
+}
+
+.admin-toolbar .admin-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--jelly-mint);
+}
+
+.admin-toolbar button {
+  color: var(--inverted-text);
+  opacity: 0.6;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 4px 8px;
+  transition: opacity 150ms ease;
+}
+.admin-toolbar button:hover { opacity: 1; }
+.admin-toolbar .admin-exit:hover { color: var(--jelly-mint); }
+.admin-toolbar .admin-reset:hover { color: #ff6b6b; }

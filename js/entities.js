@@ -1,0 +1,117 @@
+// Entity type registry. Every content unit on the site is an entity:
+//   { id: string, type: string, fields: {...} }
+// A type declares how to render itself and what a blank instance looks like.
+// Adding a future type (article, product card with price, testimonial…)
+// means adding one entry here — render/admin/store logic is generic.
+
+let uid = 0;
+export function newId(type) {
+  return type + '-' + Date.now().toString(36) + '-' + (uid++);
+}
+
+function el(tag, className, html) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (html !== undefined) node.innerHTML = html;
+  return node;
+}
+
+/* Shared card renderer — used by achievement and the generic card type
+   (skillsets / creator tools / collabs / future sales cards). */
+function renderCard(entity) {
+  const f = entity.fields;
+  const tile = el('article', 'story-tile' + (f.variant ? ' ' + f.variant : ''));
+  tile.dataset.entityId = entity.id;
+
+  const kicker = el('span', 'story-kicker', f.kicker);
+  kicker.dataset.field = 'kicker';
+  const headline = el('h3', 'story-headline', f.headline);
+  headline.dataset.field = 'headline';
+  const deck = el('p', 'story-deck', f.deck);
+  deck.dataset.field = 'deck';
+  const meta = el('span', 'story-meta', f.meta);
+  meta.dataset.field = 'meta';
+
+  tile.append(kicker, headline, deck, meta);
+  return tile;
+}
+
+const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-warm'];
+
+export const ENTITY_TYPES = {
+
+  achievement: {
+    render: renderCard,
+    blank: () => ({
+      id: newId('achievement'),
+      type: 'achievement',
+      fields: {
+        variant: '',
+        kicker: 'New Category',
+        headline: 'Double-click to edit this headline',
+        deck: 'Describe the achievement or impact here.',
+        meta: 'Tag · Tag',
+      },
+    }),
+  },
+
+  role: {
+    render(entity, index) {
+      const f = entity.fields;
+      const accent = ROLE_ACCENTS[index % ROLE_ACCENTS.length];
+      const item = el('div', 'timeline-item ' + accent);
+      item.dataset.entityId = entity.id;
+
+      const meta = el('div', 'timeline-meta');
+      const title = el('h4', '', f.title);
+      title.dataset.field = 'title';
+      const company = el('p', 'timeline-company', f.company);
+      company.dataset.field = 'company';
+      const time = el('div', 'timeline-time', f.period);
+      time.dataset.field = 'period';
+      meta.append(title, company, time);
+
+      const body = el('div', 'timeline-body');
+      const deck = el('p', 'story-deck', f.deck);
+      deck.dataset.field = 'deck';
+      const bullets = el('ul', 'timeline-bullets');
+      (f.bullets || []).forEach((text, i) => {
+        const li = el('li', '', text);
+        li.dataset.field = 'bullets.' + i;
+        bullets.append(li);
+      });
+      body.append(deck, bullets);
+
+      item.append(meta, body);
+      return item;
+    },
+    blank: () => ({
+      id: newId('role'),
+      type: 'role',
+      fields: {
+        title: 'New Role',
+        company: 'Company<br>Location',
+        period: 'MM/YYYY — MM/YYYY',
+        deck: 'Describe your role and key responsibilities here.',
+        bullets: ['Key responsibility or achievement.'],
+      },
+    }),
+  },
+
+  /* Generic card — skillsets, creator tools, collabs; the foundation for
+     future sales cards (add price/cta fields here when needed). */
+  card: {
+    render: renderCard,
+    blank: () => ({
+      id: newId('card'),
+      type: 'card',
+      fields: {
+        variant: '',
+        kicker: 'New Item',
+        headline: 'Double-click to edit this headline',
+        deck: 'Describe this item here.',
+        meta: 'Tag · Tag',
+      },
+    }),
+  },
+};

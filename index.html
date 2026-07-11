@@ -4,187 +4,98 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ilia Blinov — Head of Product Portfolio</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
 
-  <!-- NAVIGATION — exactly like The Verge: Subscribe top-right, logo + links below -->
-  <nav class="nav">
-    <div class="nav-container">
-      <ul class="nav-links">
-        <li><a href="#about">About</a></li>
-        <li><a href="#achievements">Achievements</a></li>
-        <li><a href="#experience">Experience</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-    </div>
-  </nav>
-
-  <!-- MASTHEAD — compact hero -->
-  <header class="masthead" id="about">
-    <div class="masthead-inner">
+  <!-- HEADER — The Verge structure: nav top-right, wordmark hero below -->
+  <header class="site-header">
+    <div class="site-header-inner">
+      <nav class="vnav" aria-label="Top Navigation">
+        <ul>
+          <li><a href="index.html" class="is-active">About</a></li>
+          <li><a href="skillsets.html">Skillsets</a></li>
+          <li><a href="creator-tools.html">Creator Tools</a></li>
+          <li><a href="collabs.html">Collabs</a></li>
+        </ul>
+      </nav>
 
       <div class="masthead-meta-row">
-        <span class="masthead-kicker">Product Management · Music Tech · Cyprus</span>
-        <span class="masthead-date">Available for Collaboration</span>
+        <span class="masthead-kicker" data-text-id="about.kicker">Product Management · Music Tech · Cyprus</span>
+        <span class="masthead-date" data-text-id="about.status">Available for Collaboration</span>
       </div>
 
       <div class="masthead-hero-row">
-        <h1 class="masthead-wordmark">ILIA<br>BLINOV</h1>
+        <h1 class="masthead-wordmark" data-text-id="about.wordmark">ILIA<br>BLINOV</h1>
         <div class="masthead-avatar-wrap">
           <img src="assets/roof.png" alt="Ilia Blinov" class="masthead-avatar">
         </div>
       </div>
 
-      <p class="masthead-deck">
+      <p class="masthead-deck" data-text-id="about.deck">
         Head of Product with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly.
       </p>
       <div class="hero-buttons">
-        <a href="#experience" class="btn-primary">View Experience</a>
-        <a href="https://www.linkedin.com/in/muramets/" target="_blank" rel="noopener noreferrer" class="btn-secondary">LinkedIn</a>
-        <a href="mailto:muramets007@gmail.com" class="btn-outline-mint">Email Me</a>
+        <a href="#experience" class="btn-primary" data-text-id="about.cta.primary">View Experience</a>
+        <a href="https://www.linkedin.com/in/muramets/" target="_blank" rel="noopener noreferrer" class="btn-secondary" data-text-id="about.cta.linkedin">LinkedIn</a>
+        <a href="mailto:muramets007@gmail.com" class="btn-outline-mint" data-text-id="about.cta.email">Email Me</a>
       </div>
-
     </div>
   </header>
 
-  <!-- ACHIEVEMENTS (STORY TILES) -->
-  <section class="preview-section" id="achievements">
+  <!-- ACHIEVEMENTS -->
+  <section class="section" id="achievements">
     <div class="section-container">
-      <span class="section-ribbon">Section 01 / Impact</span>
-      <h2 class="section-title">Key Achievements</h2>
-      <p class="section-subtitle">Balanced story tiles outlining critical business milestones, revenue growth, and workflow automation.</p>
+      <span class="section-ribbon" data-text-id="about.achievements.ribbon">Section 01 / Impact</span>
+      <h2 class="section-title" data-text-id="about.achievements.title">Key Achievements</h2>
+      <p class="section-subtitle" data-text-id="about.achievements.subtitle">Balanced story tiles outlining critical business milestones, revenue growth, and workflow automation.</p>
 
-      <div class="achievements-grid">
-        <!-- 1. Primary Accent Card (Mint, spans full width) -->
-        <div class="story-tile mint featured">
-          <span class="story-kicker">Revenue & Pipeline Scaling</span>
-          <h3 class="story-headline">Scaled label revenue from five to seven figures a month</h3>
-          <p class="story-deck">Turned the distribution and monetization system from a manual operation into an automated pipeline that kept growing without added headcount.</p>
-          <span class="story-meta">BI Dashboarding · Automation Pipeline</span>
-        </div>
-
-        <!-- 2. UV Border Card -->
-        <div class="story-tile uv-border">
-          <span class="story-kicker">Creator & Partner Growth</span>
-          <h3 class="story-headline">Helped 1,000+ creators and artists boost their revenue by up to 50%</h3>
-          <p class="story-deck">Unlocked short-form monetization by pairing the label's audio catalog with creators' visual content on a revenue-share basis.</p>
-          <span class="story-meta">Music Licensing · Creators Engagement</span>
-        </div>
-
-        <!-- 3. Card 1 -->
-        <div class="story-tile">
-          <span class="story-kicker">Audience & Reach</span>
-          <h3 class="story-headline">Launched promo campaigns reaching 100M+ views on average</h3>
-          <p class="story-deck">Drove influencer adoption of the label's audio catalog in short-form content through revenue-share deals, reaching hundreds of millions of views.</p>
-          <span class="story-meta">Short-form Promotion · Growth Marketing</span>
-        </div>
-
-        <!-- 4. Card 2 -->
-        <div class="story-tile">
-          <span class="story-kicker">Operations & Speed</span>
-          <h3 class="story-headline">Made a 100+ member support team 30% faster</h3>
-          <p class="story-deck">Implemented operational guides and workflows for a 100+ member support team during merger-driven rapid product scaling.</p>
-          <span class="story-meta">Ticketing Workflows · Documentation</span>
-        </div>
-
-        <!-- 5. Card 3 -->
-        <div class="story-tile">
-          <span class="story-kicker">Distribution & Delivery</span>
-          <h3 class="story-headline">Cut manual distribution work by 40%</h3>
-          <p class="story-deck">Designed a roadmap for fully automated music distribution across 100+ streaming platforms on an enter-once, reuse-everywhere model.</p>
-          <span class="story-meta">DDEX Protocol · Automation Roadmap</span>
-        </div>
-      </div>
-      <button class="add-item-btn" id="addAchievementBtn">+ Add Achievement</button>
+      <div class="tile-grid"
+           data-collection="achievements"
+           data-entity-type="achievement"
+           data-add-label="+ Add Achievement"></div>
     </div>
   </section>
 
-  <!-- WORK EXPERIENCE (STORYSTREAM TIMELINE) -->
-  <section class="preview-section" id="experience">
+  <!-- EXPERIENCE -->
+  <section class="section" id="experience">
     <div class="section-container">
-      <span class="section-ribbon">Section 02 / Experience</span>
-      <h2 class="section-title">Professional Journey</h2>
-      <p class="section-subtitle">Chronological record of roles in digital publishing and music distribution, pinned to a dashed rail.</p>
+      <span class="section-ribbon" data-text-id="about.experience.ribbon">Section 02 / Experience</span>
+      <h2 class="section-title" data-text-id="about.experience.title">Professional Journey</h2>
+      <p class="section-subtitle" data-text-id="about.experience.subtitle">Chronological record of roles in digital publishing and music distribution, pinned to a dashed rail.</p>
 
-      <div class="timeline-list">
-
-        <div class="timeline-item accent-uv">
-          <!-- LEFT: role label + title + date -->
-          <div class="timeline-meta">
-            <h4>Head Of Product</h4>
-            <p class="timeline-company">TheSoul Publishing<br>Remote, Cyprus</p>
-            <div class="timeline-time">01/2025 — 07/2025</div>
-          </div>
-          <!-- RIGHT: summary -->
-          <div class="timeline-body">
-            <p class="story-deck">Owned the product side of music production, distribution, and promotion. Leveraged automation to grow margins and keep creative focus on high-value work.</p>
-            <ul class="timeline-bullets">
-              <li>Researched and built an end-to-end music production, distribution, and monetization pipeline, boosting artist and creator revenue by up to 50%.</li>
-              <li>Consolidated dozens of third-party reports into a central visualization system to spot revenue anomalies and pattern shifts, assisting scaling from 5 to 7 figures.</li>
-              <li>Designed internal workflows and process frameworks to merge the teams and infrastructure of two major matrix organizations.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="timeline-item accent-mint">
-          <div class="timeline-meta">
-            <h4>Head of Label</h4>
-            <p class="timeline-company">TheSoul Publishing<br>Remote, Cyprus</p>
-            <div class="timeline-time">07/2023 — 01/2025</div>
-          </div>
-          <div class="timeline-body">
-            <p class="story-deck">Validated the unit economics of background music production and built the foundation to scale it into a repeatable revenue engine.</p>
-            <ul class="timeline-bullets">
-              <li>Developed and executed data-grounded monetization strategies for music as a standalone product and as video content assets.</li>
-              <li>Oversaw the buildout of IT infrastructure serving independent musicians and influencers on a revenue-share model.</li>
-              <li>Launched and scaled a network of YouTube promotion channels reaching a combined audience of 1M+.</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="timeline-item accent-blue">
-          <div class="timeline-meta">
-            <h4>Label Manager</h4>
-            <p class="timeline-company">TheSoul Publishing<br>Riga, Latvia</p>
-            <div class="timeline-time">11/2022 — 07/2023</div>
-          </div>
-          <div class="timeline-body">
-            <p class="story-deck">Ran A&R and licensing operations, signing independent artists and connecting their music with video projects across platforms.</p>
-            <ul class="timeline-bullets">
-              <li>Scouted and signed independent talent, managing legal contracts, licensing agreements, and promotional campaigns end-to-end.</li>
-              <li>Embedded artist catalog tracks into global video projects, boosting double-sided revenue growth for artists and publishers.</li>
-              <li>Onboarded 200+ artists and tripled the label's music catalog at flat operating costs.</li>
-            </ul>
-          </div>
-        </div>
-
-      </div>
-      <button class="add-item-btn" id="addRoleBtn">+ Add Role</button>
+      <div class="timeline-list"
+           data-collection="roles"
+           data-entity-type="role"
+           data-add-label="+ Add Role"></div>
     </div>
   </section>
 
   <!-- CONTACT -->
-  <section class="preview-section" id="contact">
+  <section class="section" id="contact">
     <div class="section-container">
-      <span class="section-ribbon">Section 03 / Collab</span>
-      <h2 class="section-title">Get in Touch</h2>
+      <span class="section-ribbon" data-text-id="about.contact.ribbon">Section 03 / Collab</span>
+      <h2 class="section-title" data-text-id="about.contact.title">Get in Touch</h2>
 
       <form action="mailto:muramets007@gmail.com" method="post" enctype="text/plain" class="form-stack">
         <div class="form-field">
-          <label class="form-label" for="name">Your Name</label>
+          <label class="form-label" for="name" data-text-id="about.form.name">Your Name</label>
           <input class="form-input" type="text" id="name" name="name" placeholder="John Doe" required>
         </div>
         <div class="form-field">
-          <label class="form-label" for="email">Email Address</label>
+          <label class="form-label" for="email" data-text-id="about.form.email">Email Address</label>
           <input class="form-input" type="email" id="email" name="email" placeholder="john@example.com" required>
         </div>
         <div class="form-field full-width">
-          <label class="form-label" for="message">Project Details</label>
+          <label class="form-label" for="message" data-text-id="about.form.message">Project Details</label>
           <textarea class="form-input form-textarea" id="message" name="message" placeholder="Hi Ilia, I'd like to discuss a project..." required></textarea>
         </div>
         <div>
-          <button type="submit" class="btn-primary">Send Message</button>
+          <button type="submit" class="btn-primary" data-text-id="about.form.submit">Send Message</button>
         </div>
       </form>
     </div>
@@ -227,140 +138,7 @@
     </div>
   </footer>
 
-  <!-- EDIT TOOLTIP -->
-  <div class="edit-tooltip" id="editTooltip">Double-click any text to edit</div>
-
-  <script>
-    const EDITABLE_TAGS = new Set(['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'SPAN', 'LI', 'LABEL', 'DIV']);
-    const ACCENTS = ['accent-uv', 'accent-mint', 'accent-blue'];
-    let currentEditable = null;
-
-    // ── Storage ──────────────────────────────────────────────────────────────
-    function saveContainer(sel) {
-      const el = document.querySelector(sel);
-      if (el) localStorage.setItem('cv:' + sel, el.innerHTML);
-    }
-
-    function restoreContainers() {
-      ['.achievements-grid', '.timeline-list'].forEach(sel => {
-        const saved = localStorage.getItem('cv:' + sel);
-        if (saved) {
-          const el = document.querySelector(sel);
-          if (el) el.innerHTML = saved;
-        }
-      });
-    }
-
-    function containerOf(el) {
-      const grid = document.querySelector('.achievements-grid');
-      const list = document.querySelector('.timeline-list');
-      if (grid && grid.contains(el)) return '.achievements-grid';
-      if (list && list.contains(el)) return '.timeline-list';
-      return null;
-    }
-
-    // ── Delete buttons ────────────────────────────────────────────────────────
-    function injectDeleteBtn(item, containerSel) {
-      if (item.querySelector('.delete-btn')) return;
-      const btn = document.createElement('button');
-      btn.className = 'delete-btn';
-      btn.setAttribute('aria-label', 'Delete');
-      btn.textContent = '×';
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        item.remove();
-        saveContainer(containerSel);
-      });
-      item.appendChild(btn);
-    }
-
-    function injectDeleteBtns() {
-      document.querySelectorAll('.achievements-grid .story-tile').forEach(el =>
-        injectDeleteBtn(el, '.achievements-grid'));
-      document.querySelectorAll('.timeline-list .timeline-item').forEach(el =>
-        injectDeleteBtn(el, '.timeline-list'));
-    }
-
-    // ── Init ──────────────────────────────────────────────────────────────────
-    restoreContainers();
-    injectDeleteBtns();
-
-    // ── Double-click to edit ──────────────────────────────────────────────────
-    document.addEventListener('dblclick', function (e) {
-      const target = e.target;
-      if (target.classList.contains('delete-btn')) return;
-      if (target.tagName === 'BUTTON' || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return;
-      if (target.tagName === 'A') return;
-      if (!EDITABLE_TAGS.has(target.tagName)) return;
-      if (target.isContentEditable) return;
-
-      if (currentEditable && currentEditable !== target) stopEditing(currentEditable);
-
-      target.contentEditable = 'true';
-      currentEditable = target;
-      target.focus();
-
-      function stopEditing(el) {
-        el.contentEditable = 'false';
-        const sel = containerOf(el);
-        if (sel) saveContainer(sel);
-        el.removeEventListener('blur', onBlur);
-        el.removeEventListener('keydown', onKey);
-        if (currentEditable === el) currentEditable = null;
-      }
-
-      function onBlur() { stopEditing(target); }
-      function onKey(ev) { if (ev.key === 'Escape') stopEditing(target); }
-
-      target.addEventListener('blur', onBlur);
-      target.addEventListener('keydown', onKey);
-      e.preventDefault();
-    });
-
-    // ── Add Achievement ───────────────────────────────────────────────────────
-    document.getElementById('addAchievementBtn').addEventListener('click', function () {
-      const grid = document.querySelector('.achievements-grid');
-      const tile = document.createElement('div');
-      tile.className = 'story-tile';
-      tile.innerHTML =
-        '<span class="story-kicker">New Category</span>' +
-        '<h3 class="story-headline">Double-click to edit this headline</h3>' +
-        '<p class="story-deck">Describe the achievement or impact here.</p>' +
-        '<span class="story-meta">Tag · Tag</span>';
-      grid.appendChild(tile);
-      injectDeleteBtn(tile, '.achievements-grid');
-      saveContainer('.achievements-grid');
-    });
-
-    // ── Add Role ──────────────────────────────────────────────────────────────
-    document.getElementById('addRoleBtn').addEventListener('click', function () {
-      const list = document.querySelector('.timeline-list');
-      const count = list.querySelectorAll('.timeline-item').length;
-      const accent = ACCENTS[count % ACCENTS.length];
-      const item = document.createElement('div');
-      item.className = 'timeline-item ' + accent;
-      item.innerHTML =
-        '<div class="timeline-meta">' +
-          '<h4>New Role</h4>' +
-          '<p class="timeline-company">Company<br>Location</p>' +
-          '<div class="timeline-time">MM/YYYY — MM/YYYY</div>' +
-        '</div>' +
-        '<div class="timeline-body">' +
-          '<p class="story-deck">Describe your role and key responsibilities here.</p>' +
-          '<ul class="timeline-bullets">' +
-            '<li>Key responsibility or achievement.</li>' +
-          '</ul>' +
-        '</div>';
-      list.appendChild(item);
-      injectDeleteBtn(item, '.timeline-list');
-      saveContainer('.timeline-list');
-    });
-
-    // ── Tooltip ───────────────────────────────────────────────────────────────
-    const tooltip = document.getElementById('editTooltip');
-    setTimeout(() => { tooltip.classList.add('visible'); }, 1200);
-    setTimeout(() => { tooltip.classList.remove('visible'); }, 4500);
-  </script>
+  <script type="module" src="js/main.js"></script>
 
 </body>
 </html>

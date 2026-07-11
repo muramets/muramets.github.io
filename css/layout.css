@@ -1,0 +1,349 @@
+/* ─────────────────────────────────────────────────────────
+   SITE HEADER — exact The Verge structure (light snapshot):
+   nav top-right with / separators, wordmark hero block below.
+───────────────────────────────────────────────────────── */
+.site-header {
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+  padding: 0 var(--gutter);
+}
+
+.site-header-inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 24px 0 36px;
+}
+
+/* Top band: nav pinned right, bottom-bordered like The Verge */
+.vnav {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vnav ul {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--primary-text);
+  padding-bottom: 2px;
+}
+
+/* "/" separators — The Verge: ::after, font-size 110%, abs-positioned */
+.vnav li {
+  position: relative;
+  padding-right: 26px;
+}
+.vnav li:last-child { padding-right: 0; }
+
+.vnav li:not(:last-child)::after {
+  content: '/';
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 110%;
+  color: var(--primary-text);
+  pointer-events: none;
+}
+
+/* Nav links — PolySans 300 19px/120% → Space Grotesk */
+.vnav a {
+  font-family: var(--font-sans);
+  font-size: 19px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--primary-text);
+  display: inline-block;
+  padding: 6px 0;
+  transition: opacity 150ms ease;
+}
+
+/* The Verge hover: opacity .5, color stays */
+.vnav li:hover a { opacity: 0.5; color: var(--primary-text); }
+
+/* Active page — highlighted by text color (accent per header theme) */
+.vnav a.is-active,
+.vnav li:hover a.is-active { color: var(--nav-active, var(--verge-ultraviolet)); }
+
+/* ─────────────────────────────────────────────────────────
+   MASTHEAD HERO (About page)
+───────────────────────────────────────────────────────── */
+.masthead-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  margin-bottom: 12px;
+}
+
+.masthead-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--secondary-text);
+}
+
+.masthead-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--verge-ultraviolet);
+}
+
+.masthead-hero-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 20px;
+}
+
+/* Manuka 850/90% → Anton needs lh 0.95 (docs/DESIGN.md) */
+.masthead-wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(88px, 13.5vw, 200px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 1.07px;
+  color: var(--primary-text);
+  text-transform: uppercase;
+  padding: 8px 0 12px;
+}
+
+.masthead-wordmark a { color: inherit; }
+.masthead-wordmark a:hover { color: inherit; opacity: 0.85; }
+
+.site-header--compact .site-header-inner { padding-bottom: 32px; }
+
+/* ─────────────────────────────────────────────────────────
+   SECTION HEADER BANDS — The Verge section pages are a full
+   color band (all UV on the real site; we give each page its
+   own accent from the tile palette) with the page name in
+   display type where the wordmark sits on About.
+───────────────────────────────────────────────────────── */
+.site-header--band {
+  --band-ink: #ffffff;
+  background: var(--band-bg);
+  border-bottom: none;
+}
+
+.site-header--uv     { --band-bg: var(--verge-ultraviolet); --band-ink: #ffffff; --nav-active: var(--jelly-mint); }
+.site-header--mint   { --band-bg: var(--jelly-mint);        --band-ink: #131313; --nav-active: var(--verge-ultraviolet); }
+.site-header--yellow { --band-bg: #f5ff3d;                  --band-ink: #131313; --nav-active: var(--verge-ultraviolet); }
+
+.site-header--band .vnav ul { border-bottom-color: var(--band-ink); }
+.site-header--band .vnav a,
+.site-header--band .vnav li:hover a,
+.site-header--band .vnav li:not(:last-child)::after { color: var(--band-ink); }
+.site-header--band .vnav a.is-active,
+.site-header--band .vnav li:hover a.is-active { color: var(--nav-active); }
+
+/* Page name in the band — The Verge: Manuka 900 160px/160px */
+.page-title {
+  font-family: var(--font-display);
+  font-size: clamp(72px, 12vw, 160px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 1.07px;
+  text-transform: uppercase;
+  color: var(--band-ink);
+  padding: 24px 0 8px;
+}
+
+.masthead-deck {
+  font-family: var(--font-serif);   /* The Verge sets decks in serif */
+  font-size: 19px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--secondary-text);
+  max-width: 680px;
+  margin-bottom: 20px;
+}
+
+.masthead-avatar-wrap {
+  flex-shrink: 0;
+  position: relative;
+  align-self: flex-end;
+  margin-bottom: 8px;
+}
+
+.masthead-avatar {
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary-text);
+  background: var(--surface-slate);
+  position: relative;
+  z-index: 2;
+}
+
+.masthead-avatar-wrap::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 2px solid var(--verge-ultraviolet);
+  z-index: 1;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SECTIONS
+───────────────────────────────────────────────────────── */
+.section {
+  padding: 72px var(--gutter);
+  background: var(--canvas);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.section-container {
+  max-width: var(--container);
+  margin: 0 auto;
+}
+
+.section-ribbon {
+  display: inline-block;
+  background: var(--primary-text);
+  color: var(--jelly-mint);
+  padding: 8px 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-radius: var(--radius-tile);
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 6vw, 90px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.5px;
+  color: var(--primary-text);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.section-subtitle {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--secondary-text);
+  margin-bottom: 48px;
+  max-width: 720px;
+}
+
+/* Empty state on stub pages */
+.empty-note {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--muted-text);
+  border: 1.5px dashed var(--hairline-dark);
+  border-radius: var(--radius-tile);
+  padding: 48px;
+  text-align: center;
+}
+
+/* ─────────────────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────────────────── */
+.footer {
+  background: var(--canvas-inverted);
+  color: var(--inverted-text);
+  padding: 56px var(--gutter);
+}
+
+.footer-shell { max-width: var(--container); margin: 0 auto; }
+
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px;
+}
+
+.footer-col h6 {
+  margin: 0 0 14px;
+  color: var(--jelly-mint);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.footer-col span,
+.footer-col a {
+  display: block;
+  margin: 0 0 10px;
+  color: var(--inverted-text);
+  opacity: 0.55;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.40;
+  transition: opacity 150ms ease, color 150ms ease;
+}
+
+.footer-col a:hover { opacity: 1; color: var(--jelly-mint); }
+
+.footer-credit {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  opacity: 0.40;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-credit a { color: var(--jelly-mint); font-weight: 700; }
+
+/* ─────────────────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .site-header { padding: 0 32px; }
+  .section { padding: 56px 32px; }
+  .footer { padding: 48px 32px; }
+}
+
+@media (max-width: 900px) {
+  .site-header { padding: 0 20px; }
+  .site-header-inner { padding: 16px 0 24px; }
+  .vnav a { font-size: 16px; }
+  .vnav li { padding-right: 18px; }
+  .vnav li:not(:last-child)::after { right: 5px; }
+
+  .masthead-wordmark { font-size: clamp(60px, 17vw, 110px); }
+  .masthead-avatar { width: 160px; height: 160px; }
+  .masthead-avatar-wrap::before { width: 160px; height: 160px; }
+
+  .section { padding: 48px 20px; }
+  .section-title { font-size: clamp(36px, 10vw, 60px); }
+  .footer { padding: 40px 20px; }
+  .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .footer-credit { flex-direction: column; gap: 12px; text-align: center; }
+}
+
+@media (max-width: 550px) {
+  .masthead-wordmark { font-size: clamp(48px, 18vw, 78px); }
+  .masthead-hero-row { flex-direction: column; align-items: flex-start; }
+  .masthead-meta-row { flex-direction: column; gap: 6px; align-items: flex-start; }
+}

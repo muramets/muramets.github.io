@@ -1,0 +1,116 @@
+// Seed content — the default state of every collection. localStorage
+// overrides (created through admin mode) take precedence; "Reset" in the
+// admin toolbar returns the site to exactly this.
+
+export const SEED = {
+
+  achievements: [
+    {
+      id: 'ach-revenue',
+      type: 'achievement',
+      fields: {
+        variant: 'mint featured',
+        kicker: 'Revenue & Pipeline Scaling',
+        headline: 'Scaled label revenue from five to seven figures a month',
+        deck: 'Turned the distribution and monetization system from a manual operation into an automated pipeline that kept growing without added headcount.',
+        meta: 'BI Dashboarding · Automation Pipeline',
+      },
+    },
+    {
+      id: 'ach-creators',
+      type: 'achievement',
+      fields: {
+        variant: 'uv-border',
+        kicker: 'Creator & Partner Growth',
+        headline: 'Helped 1,000+ creators and artists boost their revenue by up to 50%',
+        deck: "Unlocked short-form monetization by pairing the label's audio catalog with creators' visual content on a revenue-share basis.",
+        meta: 'Music Licensing · Creators Engagement',
+      },
+    },
+    {
+      id: 'ach-reach',
+      type: 'achievement',
+      fields: {
+        variant: '',
+        kicker: 'Audience & Reach',
+        headline: 'Launched promo campaigns reaching 100M+ views on average',
+        deck: "Drove influencer adoption of the label's audio catalog in short-form content through revenue-share deals, reaching hundreds of millions of views.",
+        meta: 'Short-form Promotion · Growth Marketing',
+      },
+    },
+    {
+      id: 'ach-support',
+      type: 'achievement',
+      fields: {
+        variant: '',
+        kicker: 'Operations & Speed',
+        headline: 'Made a 100+ member support team 30% faster',
+        deck: 'Implemented operational guides and workflows for a 100+ member support team during merger-driven rapid product scaling.',
+        meta: 'Ticketing Workflows · Documentation',
+      },
+    },
+    {
+      id: 'ach-distribution',
+      type: 'achievement',
+      fields: {
+        variant: '',
+        kicker: 'Distribution & Delivery',
+        headline: 'Cut manual distribution work by 40%',
+        deck: 'Designed a roadmap for fully automated music distribution across 100+ streaming platforms on an enter-once, reuse-everywhere model.',
+        meta: 'DDEX Protocol · Automation Roadmap',
+      },
+    },
+  ],
+
+  roles: [
+    {
+      id: 'role-hop',
+      type: 'role',
+      fields: {
+        title: 'Head Of Product',
+        company: 'TheSoul Publishing<br>Remote, Cyprus',
+        period: '01/2025 — 07/2025',
+        deck: 'Owned the product side of music production, distribution, and promotion. Leveraged automation to grow margins and keep creative focus on high-value work.',
+        bullets: [
+          'Researched and built an end-to-end music production, distribution, and monetization pipeline, boosting artist and creator revenue by up to 50%.',
+          'Consolidated dozens of third-party reports into a central visualization system to spot revenue anomalies and pattern shifts, assisting scaling from 5 to 7 figures.',
+          'Designed internal workflows and process frameworks to merge the teams and infrastructure of two major matrix organizations.',
+        ],
+      },
+    },
+    {
+      id: 'role-hol',
+      type: 'role',
+      fields: {
+        title: 'Head of Label',
+        company: 'TheSoul Publishing<br>Remote, Cyprus',
+        period: '07/2023 — 01/2025',
+        deck: 'Validated the unit economics of background music production and built the foundation to scale it into a repeatable revenue engine.',
+        bullets: [
+          'Developed and executed data-grounded monetization strategies for music as a standalone product and as video content assets.',
+          'Oversaw the buildout of IT infrastructure serving independent musicians and influencers on a revenue-share model.',
+          'Launched and scaled a network of YouTube promotion channels reaching a combined audience of 1M+.',
+        ],
+      },
+    },
+    {
+      id: 'role-lm',
+      type: 'role',
+      fields: {
+        title: 'Label Manager',
+        company: 'TheSoul Publishing<br>Riga, Latvia',
+        period: '11/2022 — 07/2023',
+        deck: 'Ran A&R and licensing operations, signing independent artists and connecting their music with video projects across platforms.',
+        bullets: [
+          'Scouted and signed independent talent, managing legal contracts, licensing agreements, and promotional campaigns end-to-end.',
+          'Embedded artist catalog tracks into global video projects, boosting double-sided revenue growth for artists and publishers.',
+          "Onboarded 200+ artists and tripled the label's music catalog at flat operating costs.",
+        ],
+      },
+    },
+  ],
+
+  skillsets: [],
+  tools: [],
+  collabs: [],
+};
