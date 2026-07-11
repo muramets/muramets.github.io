@@ -140,6 +140,8 @@
 .site-header--band .vnav a,
 .site-header--band .vnav li:hover a,
 .site-header--band .vnav li:not(:last-child)::after { color: var(--band-ink); }
+
+/* Active page on a band header: accent text color only */
 .site-header--band .vnav a.is-active,
 .site-header--band .vnav li:hover a.is-active { color: var(--nav-active); }
 
