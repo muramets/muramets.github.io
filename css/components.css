@@ -260,6 +260,17 @@
   margin-top: 4px;
 }
 
+/* Computed tenure line under the dates (not editable) */
+.timeline-duration {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  color: var(--muted-text);
+  opacity: 0.75;
+}
+
 /* Timeline Rail reference: identical pill-cornered gray tiles,
    no borders — the mint hover flood is the only state change */
 .timeline-body {

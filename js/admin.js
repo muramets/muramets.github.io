@@ -1,11 +1,11 @@
 // Admin mode: inline editing, add/delete entities, toolbar.
 // Initialized ONLY when auth.isAdmin() — public visitors never load this UI.
 
-import { ENTITY_TYPES } from './entities.js?v=19';
-import { store } from './store.js?v=19';
-import { renderCollection, getItems, applyTexts } from './render.js?v=19';
-import { logout } from './auth.js?v=19';
-import { makeSortable, createHandle } from './dnd.js?v=19';
+import { ENTITY_TYPES } from './entities.js?v=20';
+import { store } from './store.js?v=20';
+import { renderCollection, getItems, applyTexts } from './render.js?v=20';
+import { logout } from './auth.js?v=20';
+import { makeSortable, createHandle } from './dnd.js?v=20';
 
 let pageState = null; // { name: { container, items } }
 
@@ -100,6 +100,8 @@ function commitField(node) {
     entity.fields[field] = node.innerHTML;
   }
   store.saveCollection(name, pageState[name].items);
+  // period drives the computed tenure line — re-render to refresh it
+  if (field === 'period') rerender(name);
 }
 
 function commitText(node, prevHtml) {

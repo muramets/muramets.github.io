@@ -40,6 +40,21 @@ function renderCard(entity) {
    identical per the Timeline Rail reference — gray tile, mint hover. */
 const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-yellow', 'accent-ink'];
 
+/* "01/2025 — 07/2025" -> "7 months" (inclusive count, LinkedIn-style).
+   Returns null when the period doesn't parse — the line is simply omitted. */
+function formatDuration(period) {
+  const m = String(period).match(/(\d{2})\/(\d{4})\s*[—–-]+\s*(\d{2})\/(\d{4})/);
+  if (!m) return null;
+  const months = (+m[4] - +m[2]) * 12 + (+m[3] - +m[1]) + 1;
+  if (months <= 0) return null;
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  return [
+    years ? years + (years > 1 ? ' years' : ' year') : '',
+    rest ? rest + (rest > 1 ? ' months' : ' month') : '',
+  ].filter(Boolean).join(' ');
+}
+
 export const ENTITY_TYPES = {
 
   achievement: {
@@ -72,6 +87,9 @@ export const ENTITY_TYPES = {
       const time = el('div', 'timeline-time', f.period);
       time.dataset.field = 'period';
       meta.append(title, company, time);
+
+      const duration = formatDuration(f.period);
+      if (duration) meta.append(el('div', 'timeline-duration', duration));
 
       const body = el('div', 'timeline-body');
       const deck = el('p', 'story-deck', f.deck);
