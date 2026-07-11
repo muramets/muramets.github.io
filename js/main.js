@@ -1,7 +1,7 @@
 // Bootstrap: auth → texts → collections → (admin UI if authorized).
 
-import { initAuth, isAdmin } from './auth.js?v=15';
-import { renderPage, applyTexts, applyBlockOrder } from './render.js?v=15';
+import { initAuth, isAdmin } from './auth.js?v=16';
+import { renderPage, applyTexts, applyBlockOrder } from './render.js?v=16';
 
 // Cold load has no inbound view transition (nothing to morph from) —
 // give it a one-time entrance fade instead. Navigations between pages
@@ -16,6 +16,6 @@ applyBlockOrder();
 const state = renderPage();
 
 if (isAdmin()) {
-  const { initAdmin } = await import('./admin.js?v=15');
+  const { initAdmin } = await import('./admin.js?v=16');
   initAdmin(state);
 }

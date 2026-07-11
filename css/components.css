@@ -229,7 +229,9 @@
 /* Per-role accent — full saturated fill on hover (color-as-elevation) */
 .timeline-item.accent-uv   { --role-color: var(--verge-ultraviolet); --role-bg: var(--verge-ultraviolet); --role-text: #ffffff; }
 .timeline-item.accent-mint { --role-color: var(--jelly-mint); --role-bg: var(--jelly-mint); --role-text: #000000; }
-.timeline-item.accent-yellow { --role-color: var(--acid-yellow); --role-bg: var(--acid-yellow); --role-text: #000000; }
+/* acid yellow is unreadable on white — the title hovers in the system's
+   official link-hover token instead; the card fill stays yellow */
+.timeline-item.accent-yellow { --role-color: var(--deep-link-blue); --role-bg: var(--acid-yellow); --role-text: #000000; }
 .timeline-item.accent-ink    { --role-color: var(--canvas-inverted); --role-bg: var(--canvas-inverted); --role-text: #ffffff; }
 
 .timeline-item:hover .timeline-meta h4 { color: var(--role-color); }
