@@ -62,7 +62,6 @@ body {
 /* ── Masthead: stacked Verge wordmark + small avatar ── */
 .masthead-meta-row { margin: 0 0 8pt; }
 .masthead-kicker { font-size: 8pt; letter-spacing: 1.2px; color: #636363; }
-.masthead-date   { font-size: 8pt; letter-spacing: 1.2px; color: #5200ff; }
 
 .masthead-hero-row {
   align-items: center;
@@ -95,6 +94,11 @@ body {
   color: #131313;
   margin: 0 0 8pt;
 }
+
+.masthead-contacts .contact-icon { color: #5200ff; }
+
+/* Web status label (over the avatar) stays on screen only */
+.masthead-date { display: none; }
 
 .masthead-deck {
   font-size: 10.5pt;
@@ -148,13 +152,13 @@ body {
 .story-kicker,
 .story-tile.mint .story-kicker { font-size: 7pt; color: #636363; opacity: 1; letter-spacing: 1.2px; }
 
-/* All achievement headlines: uniform ultraviolet with a diamond mark */
+/* Achievement headlines: regular ink, marked by a UV diamond */
 .story-headline,
 .story-tile.mint .story-headline,
 .story-tile.featured .story-headline {
   font-size: 11pt;
   line-height: 1.15;
-  color: #5200ff;
+  color: #131313;
 }
 .story-tile .story-headline::before {
   content: '◆';
