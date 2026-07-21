@@ -73,14 +73,19 @@
 .drag-handle:active { cursor: grabbing; }
 .drag-handle:hover { background: var(--verge-ultraviolet); }
 
-.is-admin [data-block-id] { position: relative; }
+.is-admin [data-block-id],
+.is-admin [data-footer-col-id] { position: relative; }
 
 .is-admin .story-tile:hover > .drag-handle,
 .is-admin .timeline-item:hover > .drag-handle,
-.is-admin [data-block-id]:hover > .drag-handle { opacity: 1; }
+.is-admin [data-block-id]:hover > .drag-handle,
+.is-admin [data-footer-col-id]:hover > .drag-handle { opacity: 1; }
 
 /* Timeline items: handle sits on the rail, not over the role title */
 .is-admin .timeline-item > .drag-handle { left: -48px; top: 2px; }
+
+/* Footer columns: handle sits on the top-right corner of the column */
+.is-admin [data-footer-col-id] > .drag-handle { left: auto; right: 0; top: 0; }
 
 /* Item being dragged */
 .is-dragging {

@@ -196,6 +196,7 @@
   gap: 32px;
   align-items: flex-start;
   position: relative;
+  z-index: 1;
 }
 
 /* Timeline Rail reference: no dots — cards pin to the dashed rail
@@ -313,20 +314,18 @@
 }
 
 /* Visitors see the three most recent roles; earlier ones sit behind
-   a fade and the "Earlier timeline" button (admin always sees all). */
-.timeline-list.is-collapsed,
-.timeline-list.is-collapsing { position: relative; }
-.timeline-list.is-collapsed .timeline-item:nth-child(n+4) { display: none; }
-.timeline-list.is-collapsed::after,
-.timeline-list.is-collapsing::after {
+   a fade and the "Earlier timeline" / "Another life" button (admin always sees all). */
+.timeline-list.has-fade { position: relative; }
+.timeline-list.has-fade::after {
   content: '';
   position: absolute;
   left: -37px; /* cover the dashed rail too */
   right: 0;
   bottom: 0;
   height: 140px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--canvas));
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--canvas) 85%);
   pointer-events: none;
+  z-index: 5;
 }
 
 .timeline-expand {
@@ -342,9 +341,21 @@
   text-transform: uppercase;
   color: var(--secondary-text);
   padding: 10px 24px;
-  transition: color 180ms ease;
+  transition: color 200ms ease, opacity 150ms cubic-bezier(0.4, 0, 0.2, 1), transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 6;
 }
 .timeline-expand:hover { color: var(--verge-ultraviolet); }
+
+/* Smooth ultraviolet cross-fade state during text morph */
+.timeline-expand.is-swapping {
+  opacity: 0;
+  transform: translateY(3px) scale(0.97);
+  color: var(--verge-ultraviolet);
+}
+.timeline-expand.is-swapped-pulse {
+  color: var(--verge-ultraviolet);
+}
 
 /* Cards arriving on "Earlier timeline" — soft rise, staggered via JS */
 .timeline-item.is-revealing {

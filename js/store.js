@@ -145,6 +145,15 @@ export const store = {
     localStorage.setItem(key('blocks', page), JSON.stringify(ids));
   },
 
+  /** @returns {string[]|null} footer column order for a page */
+  loadFooterColOrder(page) {
+    return localJSON(key('footerCols', page)) ?? REMOTE?.footerCols?.[page] ?? null;
+  },
+
+  saveFooterColOrder(page, ids) {
+    localStorage.setItem(key('footerCols', page), JSON.stringify(ids));
+  },
+
   /** Drop local drafts — site falls back to the published content. */
   resetAll() {
     Object.keys(localStorage)
@@ -164,6 +173,7 @@ export const store = {
       collections: structuredClone(REMOTE?.collections ?? {}),
       texts: structuredClone(REMOTE?.texts ?? {}),
       blocks: structuredClone(REMOTE?.blocks ?? {}),
+      footerCols: structuredClone(REMOTE?.footerCols ?? {}),
     };
     Object.keys(localStorage).forEach(k => {
       if (k.startsWith(PREFIX + 'col.')) {
@@ -183,6 +193,8 @@ export const store = {
         snap.texts[v][page] = { ...(snap.texts[v][page] ?? {}), ...(localJSON(k) ?? {}) };
       } else if (k.startsWith(PREFIX + 'blocks.')) {
         snap.blocks[k.slice((PREFIX + 'blocks.').length)] = localJSON(k);
+      } else if (k.startsWith(PREFIX + 'footerCols.')) {
+        snap.footerCols[k.slice((PREFIX + 'footerCols.').length)] = localJSON(k);
       }
     });
     // drop data of deleted variants

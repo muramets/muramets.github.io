@@ -89,3 +89,17 @@ export function applyBlockOrder() {
     if (block) parent.insertBefore(block, anchor);
   });
 }
+
+/** Reorder footer columns ([data-footer-col-id]) per saved order. */
+export function applyFooterColOrder() {
+  const ids = store.loadFooterColOrder(currentPage());
+  if (!ids) return;
+  const cols = [...document.querySelectorAll('[data-footer-col-id]')];
+  if (cols.length < 2) return;
+  const byId = new Map(cols.map(c => [c.dataset.footerColId, c]));
+  const grid = cols[0].parentNode;
+  ids.forEach(id => {
+    const col = byId.get(id);
+    if (col) grid.appendChild(col);
+  });
+}

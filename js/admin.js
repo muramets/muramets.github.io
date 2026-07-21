@@ -48,6 +48,11 @@ function undo() {
     store.saveBlockOrder(currentPage(), entry.order);
     applyBlockOrderDom(entry.order);
     lastBlockOrder = entry.order;
+
+  } else if (entry.kind === 'footerCols') {
+    store.saveFooterColOrder(currentPage(), entry.order);
+    applyFooterColOrderDom(entry.order);
+    lastFooterColOrder = entry.order;
   }
 }
 
@@ -60,6 +65,17 @@ function applyBlockOrderDom(ids) {
   ids.forEach(id => {
     const block = byId.get(id);
     if (block) parent.insertBefore(block, anchor);
+  });
+}
+
+function applyFooterColOrderDom(ids) {
+  const cols = [...document.querySelectorAll('[data-footer-col-id]')];
+  if (cols.length < 2) return;
+  const byId = new Map(cols.map(c => [c.dataset.footerColId, c]));
+  const grid = cols[0].parentNode;
+  ids.forEach(id => {
+    const col = byId.get(id);
+    if (col) grid.appendChild(col);
   });
 }
 
@@ -270,6 +286,27 @@ function initBlockSorting() {
       pushUndo({ kind: 'blocks', order: lastBlockOrder });
       lastBlockOrder = ids;
       store.saveBlockOrder(currentPage(), ids);
+    },
+  });
+}
+
+/* Footer columns ([data-footer-col-id]) are sortable in admin mode. */
+let lastFooterColOrder = null;
+
+function initFooterColSorting() {
+  const cols = [...document.querySelectorAll('[data-footer-col-id]')];
+  if (cols.length < 2) return;
+  lastFooterColOrder = cols.map(c => c.dataset.footerColId);
+  cols.forEach(col => col.append(createHandle('Drag to move column')));
+  makeSortable({
+    container: cols[0].parentNode,
+    itemSelector: '[data-footer-col-id]',
+    onReorder() {
+      const ids = [...document.querySelectorAll('[data-footer-col-id]')]
+        .map(c => c.dataset.footerColId);
+      pushUndo({ kind: 'footerCols', order: lastFooterColOrder });
+      lastFooterColOrder = ids;
+      store.saveFooterColOrder(currentPage(), ids);
     },
   });
 }
@@ -537,6 +574,7 @@ export function initAdmin(state) {
     });
   });
   initBlockSorting();
+  initFooterColSorting();
   injectAddButtons();
   injectVariantBar();
   injectToolbar();

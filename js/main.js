@@ -3,7 +3,7 @@
 
 import { initAuth, isAdmin, login, logout } from './auth.js?v=35';
 import { initStore } from './store.js?v=35';
-import { renderPage, applyTexts, applyBlockOrder, pruneEmptyNav } from './render.js?v=35';
+import { renderPage, applyTexts, applyBlockOrder, applyFooterColOrder, pruneEmptyNav } from './render.js?v=35';
 
 // Cold load has no inbound view transition (nothing to morph from) —
 // give it a one-time entrance fade instead. Navigations between pages
@@ -25,6 +25,7 @@ await initStore(); // published content must be in place before render
 initAuth();
 applyTexts();
 applyBlockOrder();
+applyFooterColOrder();
 const state = renderPage();
 
 if (isAdmin()) {
@@ -36,15 +37,47 @@ if (isAdmin()) {
   initTimelineCollapse();
 }
 
+// Prevent browser scroll restoration jumps during dynamic JS hydration
+if ('scrollRestoration' in history) {
+  history.scrollRestoration = 'manual';
+}
+
+// Smooth scroll handler for anchor links
+document.addEventListener('click', e => {
+  const anchor = e.target.closest('a[href^="#"]');
+  if (!anchor) return;
+  const targetId = anchor.getAttribute('href').slice(1);
+  if (!targetId) return;
+  const targetEl = document.getElementById(targetId);
+  if (targetEl) {
+    e.preventDefault();
+    targetEl.scrollIntoView({ behavior: 'smooth' });
+    history.pushState(null, '', `#${targetId}`);
+  }
+});
+
 /* Professional Journey: visitors get the three most recent roles; the
-   earlier ones wait behind a fade and one button press. Expanding
-   animates the list height and staggers the incoming cards; the same
-   button then collapses back to recent-only. */
+   earlier ones wait behind a fade and expand by 3 cards at a time.
+   Button text progresses: "Earlier timeline ↓" → "Another life ↓" → "Recent only ↑".
+   Collapsing uses a non-destructive dual-motion animation to fold the list and
+   bring Get in Touch into focus seamlessly. */
 function initTimelineCollapse() {
   const list = document.querySelector('.timeline-list');
-  if (!list || list.querySelectorAll('[data-entity-id]').length <= 3) return;
+  const items = list ? Array.from(list.querySelectorAll('.timeline-item')) : [];
+  if (!list || items.length <= 3) return;
 
-  list.classList.add('is-collapsed');
+  let visibleCount = 3;
+
+  function updateVisibility() {
+    items.forEach((item, index) => {
+      item.style.display = index < visibleCount ? '' : 'none';
+    });
+    list.classList.toggle('has-fade', visibleCount < items.length);
+  }
+
+  // Initial state: show first 3 items with bottom fade
+  updateVisibility();
+
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'timeline-expand';
@@ -53,11 +86,30 @@ function initTimelineCollapse() {
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  function getButtonText(count) {
+    if (count >= items.length) return 'Recent only ↑';
+    if (count > 3) return 'Another life ↓';
+    return 'Earlier timeline ↓';
+  }
+
+  function swapButtonText(newText) {
+    if (btn.textContent === newText) return;
+    if (reduced) { btn.textContent = newText; return; }
+
+    btn.classList.add('is-swapping');
+    setTimeout(() => {
+      btn.textContent = newText;
+      btn.classList.remove('is-swapping');
+      btn.classList.add('is-swapped-pulse');
+      setTimeout(() => btn.classList.remove('is-swapped-pulse'), 300);
+    }, 150);
+  }
+
   function runHeight(from, to, done) {
     list.style.height = from + 'px';
     list.style.overflow = 'hidden';
     void list.offsetHeight; // flush, so the next height change transitions
-    list.style.transition = 'height 500ms ease';
+    list.style.transition = 'height 500ms cubic-bezier(0.4, 0, 0.2, 1)';
     list.style.height = to + 'px';
     list.addEventListener('transitionend', function clear(e) {
       if (e.propertyName !== 'height') return;
@@ -67,48 +119,143 @@ function initTimelineCollapse() {
     });
   }
 
-  function expand() {
+  function expandNext() {
     const from = list.offsetHeight;
-    list.classList.remove('is-collapsed');
-    if (reduced) return;
-    runHeight(from, list.offsetHeight);
-    list.querySelectorAll('.timeline-item:nth-child(n+4)').forEach((item, i) => {
-      item.classList.add('is-revealing');
-      item.style.animationDelay = i * 70 + 'ms';
-      item.addEventListener('animationend', () => {
-        item.classList.remove('is-revealing');
-        item.style.animationDelay = '';
-      }, { once: true });
-    });
+    const prevCount = visibleCount;
+    visibleCount = Math.min(items.length, visibleCount + 3);
+
+    const firstNewItem = items[prevCount];
+
+    // Unhide newly revealed items for measurement
+    for (let i = prevCount; i < visibleCount; i++) {
+      if (items[i]) items[i].style.display = '';
+    }
+    list.classList.toggle('has-fade', visibleCount < items.length);
+
+    const to = list.offsetHeight;
+
+    if (!reduced) {
+      document.documentElement.style.overflowAnchor = 'none';
+
+      const startScrollY = window.scrollY;
+      const firstNewRect = firstNewItem ? firstNewItem.getBoundingClientRect() : null;
+      // Target scroll Y: bring the first newly revealed card smoothly into focus (80px from top)
+      const targetScrollY = firstNewRect
+        ? Math.max(0, startScrollY + firstNewRect.top - 80)
+        : startScrollY;
+
+      const duration = 500;
+      const startTime = performance.now();
+      list.style.overflow = 'hidden';
+
+      for (let i = prevCount; i < visibleCount; i++) {
+        const item = items[i];
+        if (!item) continue;
+        item.classList.add('is-revealing');
+        item.style.animationDelay = (i - prevCount) * 70 + 'ms';
+        item.addEventListener('animationend', () => {
+          item.classList.remove('is-revealing');
+          item.style.animationDelay = '';
+        }, { once: true });
+      }
+
+      function animate(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        const ease = 1 - Math.pow(1 - progress, 3);
+
+        const currentH = from + (to - from) * ease;
+        list.style.height = currentH + 'px';
+
+        if (Math.abs(targetScrollY - startScrollY) > 2) {
+          window.scrollTo(0, startScrollY + (targetScrollY - startScrollY) * ease);
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          list.style.height = list.style.overflow = '';
+          document.documentElement.style.overflowAnchor = '';
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    swapButtonText(getButtonText(visibleCount));
   }
 
-  function collapse() {
+  function collapseToRecent() {
     const from = list.offsetHeight;
-    list.classList.add('is-collapsed');
-    const to = list.offsetHeight;
-    const glide = () => document.getElementById('contact')
-      ?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
-    if (reduced) { glide(); return; }
-    // fold smoothly — cards stay visible and get clipped by the shrinking
-    // container; once the height settles, glide to Get in Touch.
-    // Browser scroll anchoring would pin the content BELOW the list and
-    // let the folding timeline drift down the screen — turn it off so the
-    // fold happens in place and Get in Touch rises naturally.
+    const thirdItem = items[2];
+
+    // Non-destructive measurement of target height (first 3 items)
+    const listRect = list.getBoundingClientRect();
+    const thirdRect = thirdItem.getBoundingClientRect();
+    const to = Math.round(thirdRect.bottom - listRect.top);
+
+    // Keep fade overlay active during fold so cards slide cleanly behind it
+    list.classList.add('has-fade');
+
+    // Smoothly morph button label to 'Earlier timeline ↓' immediately during fold
+    swapButtonText(getButtonText(3));
+
+    const contactEl = document.getElementById('contact');
+
+    if (reduced) {
+      visibleCount = 3;
+      updateVisibility();
+      (contactEl || btn).scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+
+    // Disable browser scroll anchoring to prevent scroll jitter during fold
     document.documentElement.style.overflowAnchor = 'none';
-    list.classList.remove('is-collapsed');
-    list.classList.add('is-collapsing');
-    runHeight(from, to, () => {
-      list.classList.remove('is-collapsing');
-      list.classList.add('is-collapsed');
-      document.documentElement.style.overflowAnchor = '';
-      glide();
-    });
+
+    // Synchronized RAF Dual-Motion: Height fold + Scroll glide
+    const startScrollY = window.scrollY;
+    const deltaH = from - to;
+
+    const contactRect = contactEl ? contactEl.getBoundingClientRect() : null;
+    const targetScrollY = contactRect
+      ? Math.max(0, startScrollY + contactRect.top - deltaH - 40)
+      : startScrollY;
+
+    const duration = 500;
+    const startTime = performance.now();
+    list.style.overflow = 'hidden';
+
+    function animate(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      const ease = 1 - Math.pow(1 - progress, 3);
+
+      const currentH = from + (to - from) * ease;
+      list.style.height = currentH + 'px';
+
+      if (Math.abs(targetScrollY - startScrollY) > 2) {
+        window.scrollTo(0, startScrollY + (targetScrollY - startScrollY) * ease);
+      }
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        visibleCount = 3;
+        updateVisibility();
+        list.style.height = list.style.overflow = '';
+        document.documentElement.style.overflowAnchor = '';
+      }
+    }
+
+    requestAnimationFrame(animate);
   }
 
   btn.addEventListener('click', () => {
-    const expanding = list.classList.contains('is-collapsed');
-    if (expanding) expand(); else collapse();
-    btn.textContent = expanding ? 'Recent only ↑' : 'Earlier timeline ↓';
+    if (visibleCount >= items.length) {
+      collapseToRecent();
+    } else {
+      expandNext();
+    }
   });
 }
 
