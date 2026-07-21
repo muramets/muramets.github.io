@@ -40,12 +40,13 @@ function renderCard(entity) {
    identical per the Timeline Rail reference — gray tile, mint hover. */
 const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-yellow', 'accent-ink'];
 
-/* "01/2025 — 07/2025" -> "7 months" (inclusive count, LinkedIn-style).
+/* "01/2025 — 07/2025" -> "6 months" (calendar difference, so a clean
+   07/2025 — 07/2026 year reads "1 year", not "1 year 1 month").
    Returns null when the period doesn't parse — the line is simply omitted. */
 function formatDuration(period) {
   const m = String(period).match(/(\d{2})\/(\d{4})\s*[—–-]+\s*(\d{2})\/(\d{4})/);
   if (!m) return null;
-  const months = (+m[4] - +m[2]) * 12 + (+m[3] - +m[1]) + 1;
+  const months = (+m[4] - +m[2]) * 12 + (+m[3] - +m[1]);
   if (months <= 0) return null;
   const years = Math.floor(months / 12);
   const rest = months % 12;
