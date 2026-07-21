@@ -126,6 +126,8 @@ body {
   filter: none;
   transform: none;
   position: static;
+  font-size: 9.5pt;
+  color: #444;
 }
 .deck-pane + .deck-pane { margin-top: 2pt; }
 

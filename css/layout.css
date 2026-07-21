@@ -217,12 +217,17 @@
   opacity: 0.35;
 }
 
+/* Hierarchy: the intro line leads, the rotating panes read second */
+.deck-intro { color: var(--primary-text); }
+
 /* Panes stack in one grid cell — container keeps the taller pane's
    height, so the swap never shifts the layout below. */
 .deck-swap { display: grid; }
 
 .deck-pane {
   grid-area: 1 / 1;
+  font-size: 16px;
+  color: var(--muted-text);
   opacity: 0;
   filter: blur(4px);
   transform: translateY(6px);
