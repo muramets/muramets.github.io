@@ -1,7 +1,10 @@
 {
   "version": 1,
   "variants": [
-    { "id": "default", "label": "Music" }
+    {
+      "id": "default",
+      "label": "Music"
+    }
   ],
   "activeVariant": "default",
   "collections": {
@@ -63,7 +66,67 @@
           }
         }
       ],
-      "tools": []
+      "tools": [],
+      "roles": [
+        {
+          "id": "role-mruopszo-0",
+          "type": "role",
+          "fields": {
+            "title": "Career Break",
+            "company": "<div>Independent</div><div>Remote</div>",
+            "period": "07/2025 — 07/2026",
+            "deck": "Stepped away and built where my experience pointed — and watched the map open up with every project. What I found: my track record is a toolkit, not a destination. And the place where the whole toolkit works at once is music.",
+            "bullets": [
+              "Built HackTube — a full-cycle production studio for BGM YouTube videos: find the idea, edit, render — inside YouTube's native UI, because&nbsp;the best onboarding is the one the user already finished."
+            ]
+          }
+        },
+        {
+          "id": "role-hop",
+          "type": "role",
+          "fields": {
+            "title": "Head Of Product",
+            "company": "TheSoul Publishing<br>Remote, Cyprus",
+            "period": "01/2025 — 07/2025",
+            "deck": "Owned the product side of music production, distribution, and promotion. Leveraged automation to grow margins and keep creative focus on high-value work.",
+            "bullets": [
+              "Researched and built an end-to-end music production, distribution, and monetization pipeline, boosting artist and creator revenue by up to 50%.",
+              "Consolidated dozens of third-party reports into a central visualization system to spot revenue anomalies and pattern shifts, assisting scaling from 5 to 7 figures.",
+              "Designed internal workflows and process frameworks to merge the teams and infrastructure of two major matrix organizations."
+            ]
+          }
+        },
+        {
+          "id": "role-hol",
+          "type": "role",
+          "fields": {
+            "title": "Head of Label",
+            "company": "TheSoul Publishing<br>Remote, Cyprus",
+            "period": "07/2023 — 01/2025",
+            "deck": "Validated the unit economics of background music production and built the foundation to scale it into a repeatable revenue engine.",
+            "bullets": [
+              "Developed and executed data-grounded monetization strategies for music as a standalone product and as video content assets.",
+              "Oversaw the buildout of IT infrastructure serving independent musicians and influencers on a revenue-share model.",
+              "Launched and scaled a network of YouTube promotion channels reaching a combined audience of 1M+."
+            ]
+          }
+        },
+        {
+          "id": "role-lm",
+          "type": "role",
+          "fields": {
+            "title": "Label Manager",
+            "company": "TheSoul Publishing<br>Riga, Latvia",
+            "period": "11/2022 — 07/2023",
+            "deck": "Ran A&R and licensing operations, signing independent artists and connecting their music with video projects across platforms.",
+            "bullets": [
+              "Scouted and signed independent talent, managing legal contracts, licensing agreements, and promotional campaigns end-to-end.",
+              "Embedded artist catalog tracks into global video projects, boosting double-sided revenue growth for artists and publishers.",
+              "Onboarded 200+ artists and tripled the label's music catalog at flat operating costs."
+            ]
+          }
+        }
+      ]
     }
   },
   "texts": {
@@ -96,6 +159,10 @@
     }
   },
   "blocks": {
-    "/index.html": ["achievements", "experience", "contact"]
+    "/index.html": [
+      "achievements",
+      "experience",
+      "contact"
+    ]
   }
 }
