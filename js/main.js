@@ -124,7 +124,11 @@ function initTimelineCollapse() {
     const prevCount = visibleCount;
     visibleCount = Math.min(items.length, visibleCount + 3);
 
-    const firstNewItem = items[prevCount];
+    // Unseen content starts where the fade was cutting the pre-expand
+    // list — NOT at the first new card: the last visible card's tail was
+    // hidden under the gradient and must not fly past the viewer.
+    const FADE_H = 140; // keep in sync with .timeline-list.has-fade::after
+    const unseenTopViewport = list.getBoundingClientRect().bottom - FADE_H;
 
     // Unhide newly revealed items for measurement
     for (let i = prevCount; i < visibleCount; i++) {
@@ -138,11 +142,8 @@ function initTimelineCollapse() {
       document.documentElement.style.overflowAnchor = 'none';
 
       const startScrollY = window.scrollY;
-      const firstNewRect = firstNewItem ? firstNewItem.getBoundingClientRect() : null;
-      // Target scroll Y: bring the first newly revealed card smoothly into focus (80px from top)
-      const targetScrollY = firstNewRect
-        ? Math.max(0, startScrollY + firstNewRect.top - 80)
-        : startScrollY;
+      // Bring the start of the unseen zone to ~100px below the viewport top
+      const targetScrollY = Math.max(0, startScrollY + unseenTopViewport - 100);
 
       const duration = 500;
       const startTime = performance.now();
