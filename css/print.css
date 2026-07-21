@@ -117,6 +117,18 @@ body {
   margin-bottom: 0;
 }
 
+/* PDF shows both deck panes in full, no toggle chrome */
+.deck-toggle { display: none; }
+.masthead-deck-block { max-width: none; }
+.deck-swap { display: block; }
+.deck-pane {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  position: static;
+}
+.deck-pane + .deck-pane { margin-top: 2pt; }
+
 .site-header {
   margin-bottom: 16pt;
   border-bottom: 1pt solid #131313;

@@ -259,3 +259,25 @@
 .admin-toolbar button:hover { opacity: 1; }
 .admin-toolbar .admin-exit:hover { color: var(--jelly-mint); }
 .admin-toolbar .admin-reset:hover { color: #ff6b6b; }
+
+/* Past/Present deck: the admin edits both panes at once — unstack them,
+   label each, and drop the toggle (rotation is off in admin anyway). */
+.admin-authed .deck-swap { display: flex; flex-direction: column; gap: 10px; }
+.admin-authed .deck-pane {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  pointer-events: auto;
+}
+.admin-authed .deck-pane::before {
+  content: attr(data-deck-label);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--verge-ultraviolet);
+  margin-bottom: 2px;
+}
+.admin-authed .deck-toggle { display: none; }

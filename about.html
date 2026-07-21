@@ -4,14 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ilia Blinov — Head of Product Portfolio</title>
-  <link rel="stylesheet" href="css/tokens.css?v=25">
-  <link rel="stylesheet" href="css/base.css?v=25">
-  <link rel="stylesheet" href="css/layout.css?v=25">
-  <link rel="stylesheet" href="css/components.css?v=25">
-  <link rel="stylesheet" href="css/motion.css?v=25">
-  <link rel="stylesheet" href="css/admin.css?v=25">
-  <link rel="stylesheet" href="css/print.css?v=25" media="print">
-  <script type="module" src="js/main.js?v=25" blocking="render"></script>
+  <link rel="stylesheet" href="css/tokens.css?v=26">
+  <link rel="stylesheet" href="css/base.css?v=26">
+  <link rel="stylesheet" href="css/layout.css?v=26">
+  <link rel="stylesheet" href="css/components.css?v=26">
+  <link rel="stylesheet" href="css/motion.css?v=26">
+  <link rel="stylesheet" href="css/admin.css?v=26">
+  <link rel="stylesheet" href="css/print.css?v=26" media="print">
+  <script type="module" src="js/main.js?v=26" blocking="render"></script>
 </head>
 <body>
 
@@ -41,9 +41,18 @@
 
       <p class="masthead-contacts print-only" data-text-id="about.contacts"><span class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg></span> muramets007@gmail.com &nbsp;·&nbsp; <span class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span> +357 97 430 150 &nbsp;·&nbsp; <span class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> Cyprus &nbsp;·&nbsp; <span class="contact-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg></span> linkedin.com/in/muramets</p>
 
-      <p class="masthead-deck" data-text-id="about.deck">
-        Head of Product with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly.
-      </p>
+      <div class="masthead-deck-block">
+        <p class="masthead-deck" data-text-id="about.deck.intro">I help music and the people who make it earn what they deserve.</p>
+        <div class="deck-toggle" aria-label="Then and now">
+          <button type="button" class="deck-toggle-tab is-active" data-deck-tab="past">Past</button>
+          <span class="deck-toggle-sep">/</span>
+          <button type="button" class="deck-toggle-tab" data-deck-tab="present">Present</button>
+        </div>
+        <div class="deck-swap">
+          <p class="masthead-deck deck-pane is-active" data-deck-pane="past" data-deck-label="Past" data-text-id="about.deck.past">Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly.</p>
+          <p class="masthead-deck deck-pane" data-deck-pane="present" data-deck-label="Present" data-text-id="about.deck.present">Now exploring how to be useful in the artist development game — with the skills that got me here, the ones I'm picking up along the way, and the personality that comes with them.</p>
+        </div>
+      </div>
       <div class="hero-buttons">
         <a href="#experience" class="btn-primary" data-text-id="about.cta.primary">View Experience</a>
         <a href="https://www.linkedin.com/in/muramets/" target="_blank" rel="noopener noreferrer" class="btn-secondary" data-text-id="about.cta.linkedin">LinkedIn</a>
