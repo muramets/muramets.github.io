@@ -1,9 +1,9 @@
 // Bootstrap: remote content → auth → texts → collections →
 // (admin UI if authorized).
 
-import { initAuth, isAdmin, login, logout } from './auth.js?v=28';
-import { initStore } from './store.js?v=28';
-import { renderPage, applyTexts, applyBlockOrder, pruneEmptyNav } from './render.js?v=28';
+import { initAuth, isAdmin, login, logout } from './auth.js?v=29';
+import { initStore } from './store.js?v=29';
+import { renderPage, applyTexts, applyBlockOrder, pruneEmptyNav } from './render.js?v=29';
 
 // Cold load has no inbound view transition (nothing to morph from) —
 // give it a one-time entrance fade instead. Navigations between pages
@@ -28,11 +28,29 @@ applyBlockOrder();
 const state = renderPage();
 
 if (isAdmin()) {
-  const { initAdmin } = await import('./admin.js?v=28');
+  const { initAdmin } = await import('./admin.js?v=29');
   initAdmin(state);
 } else {
   pruneEmptyNav(); // hide links to pages that have nothing on them yet
   initDeckToggle();
+  initTimelineCollapse();
+}
+
+/* Professional Journey: visitors get the three most recent roles;
+   the earlier ones wait behind a fade and one button press. */
+function initTimelineCollapse() {
+  const list = document.querySelector('.timeline-list');
+  if (!list || list.querySelectorAll('[data-entity-id]').length <= 3) return;
+  list.classList.add('is-collapsed');
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'timeline-expand';
+  btn.textContent = 'Earlier timeline ↓';
+  btn.addEventListener('click', () => {
+    list.classList.remove('is-collapsed');
+    btn.remove();
+  }, { once: true });
+  list.after(btn);
 }
 
 /* Past/Present deck rotation — public only (admin sees both panes

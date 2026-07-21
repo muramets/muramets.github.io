@@ -312,6 +312,38 @@
   font-size: 12px;
 }
 
+/* Visitors see the three most recent roles; earlier ones sit behind
+   a fade and the "Earlier timeline" button (admin always sees all). */
+.timeline-list.is-collapsed { position: relative; }
+.timeline-list.is-collapsed .timeline-item:nth-child(n+4) { display: none; }
+.timeline-list.is-collapsed::after {
+  content: '';
+  position: absolute;
+  left: -37px; /* cover the dashed rail too */
+  right: 0;
+  bottom: 0;
+  height: 140px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--canvas));
+  pointer-events: none;
+}
+
+.timeline-expand {
+  display: block;
+  margin: 2px auto 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--secondary-text);
+  padding: 10px 24px;
+  transition: color 180ms ease;
+}
+.timeline-expand:hover { color: var(--verge-ultraviolet); }
+
 /* Closing line after the bullets — same voice, no marker */
 .timeline-outro {
   font-family: var(--font-sans);

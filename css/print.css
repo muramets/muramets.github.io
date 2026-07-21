@@ -223,6 +223,11 @@ body {
   border-top: 0.5pt solid #d4d4d4;
 }
 
+/* PDF always prints the full timeline */
+.timeline-list.is-collapsed .timeline-item:nth-child(n+4) { display: grid; }
+.timeline-list.is-collapsed::after { display: none; }
+.timeline-expand { display: none; }
+
 .timeline-bullets li { break-inside: avoid; }
 .timeline-body .story-deck { break-after: avoid; }
 .timeline-list .timeline-item:first-child { border-top: none; padding-top: 0; }
