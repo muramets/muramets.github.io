@@ -314,9 +314,11 @@
 
 /* Visitors see the three most recent roles; earlier ones sit behind
    a fade and the "Earlier timeline" button (admin always sees all). */
-.timeline-list.is-collapsed { position: relative; }
+.timeline-list.is-collapsed,
+.timeline-list.is-collapsing { position: relative; }
 .timeline-list.is-collapsed .timeline-item:nth-child(n+4) { display: none; }
-.timeline-list.is-collapsed::after {
+.timeline-list.is-collapsed::after,
+.timeline-list.is-collapsing::after {
   content: '';
   position: absolute;
   left: -37px; /* cover the dashed rail too */

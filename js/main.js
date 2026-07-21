@@ -1,9 +1,9 @@
 // Bootstrap: remote content → auth → texts → collections →
 // (admin UI if authorized).
 
-import { initAuth, isAdmin, login, logout } from './auth.js?v=30';
-import { initStore } from './store.js?v=30';
-import { renderPage, applyTexts, applyBlockOrder, pruneEmptyNav } from './render.js?v=30';
+import { initAuth, isAdmin, login, logout } from './auth.js?v=31';
+import { initStore } from './store.js?v=31';
+import { renderPage, applyTexts, applyBlockOrder, pruneEmptyNav } from './render.js?v=31';
 
 // Cold load has no inbound view transition (nothing to morph from) —
 // give it a one-time entrance fade instead. Navigations between pages
@@ -28,7 +28,7 @@ applyBlockOrder();
 const state = renderPage();
 
 if (isAdmin()) {
-  const { initAdmin } = await import('./admin.js?v=30');
+  const { initAdmin } = await import('./admin.js?v=31');
   initAdmin(state);
 } else {
   pruneEmptyNav(); // hide links to pages that have nothing on them yet
@@ -53,11 +53,7 @@ function initTimelineCollapse() {
 
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function animateHeight(mutate) {
-    const from = list.offsetHeight;
-    mutate();
-    if (reduced) return;
-    const to = list.offsetHeight;
+  function runHeight(from, to, done) {
     list.style.height = from + 'px';
     list.style.overflow = 'hidden';
     void list.offsetHeight; // flush, so the next height change transitions
@@ -65,29 +61,52 @@ function initTimelineCollapse() {
     list.style.height = to + 'px';
     list.addEventListener('transitionend', function clear(e) {
       if (e.propertyName !== 'height') return;
-      list.style.height = list.style.overflow = list.style.transition = '';
       list.removeEventListener('transitionend', clear);
+      list.style.height = list.style.overflow = list.style.transition = '';
+      done?.();
+    });
+  }
+
+  function expand() {
+    const from = list.offsetHeight;
+    list.classList.remove('is-collapsed');
+    if (reduced) return;
+    runHeight(from, list.offsetHeight);
+    list.querySelectorAll('.timeline-item:nth-child(n+4)').forEach((item, i) => {
+      item.classList.add('is-revealing');
+      item.style.animationDelay = i * 70 + 'ms';
+      item.addEventListener('animationend', () => {
+        item.classList.remove('is-revealing');
+        item.style.animationDelay = '';
+      }, { once: true });
+    });
+  }
+
+  function backToSection() {
+    if (list.getBoundingClientRect().top < 0) {
+      list.closest('.section')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
+    }
+  }
+
+  function collapse() {
+    const from = list.offsetHeight;
+    list.classList.add('is-collapsed');
+    if (reduced) { backToSection(); return; }
+    const to = list.offsetHeight;
+    // keep the cards visible while the shrinking container clips them —
+    // display:none lands only after the motion is over
+    list.classList.remove('is-collapsed');
+    list.classList.add('is-collapsing');
+    runHeight(from, to, () => {
+      list.classList.remove('is-collapsing');
+      list.classList.add('is-collapsed');
+      backToSection(); // scroll only after the height settles — no tug-of-war
     });
   }
 
   btn.addEventListener('click', () => {
     const expanding = list.classList.contains('is-collapsed');
-    animateHeight(() => list.classList.toggle('is-collapsed'));
-
-    if (expanding && !reduced) {
-      list.querySelectorAll('.timeline-item:nth-child(n+4)').forEach((item, i) => {
-        item.classList.add('is-revealing');
-        item.style.animationDelay = i * 70 + 'ms';
-        item.addEventListener('animationend', () => {
-          item.classList.remove('is-revealing');
-          item.style.animationDelay = '';
-        }, { once: true });
-      });
-    }
-    if (!expanding && list.getBoundingClientRect().top < 0) {
-      // collapsed while scrolled deep — bring the section back
-      list.closest('.section')?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' });
-    }
+    if (expanding) expand(); else collapse();
     btn.textContent = expanding ? 'Recent only ↑' : 'Earlier timeline ↓';
   });
 }
