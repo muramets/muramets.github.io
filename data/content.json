@@ -231,11 +231,17 @@
         "footer.skills.4": "<br>",
         "footer.domains.2": "Business Intelligence",
         "footer.domains.3": "Workflow Automation",
-        "footer.domains.4": "<br>",
+        "footer.domains.4": "Inventory &amp; Sales Operations",
         "about.kicker": "Product Management · OPERATIONS&nbsp;<span style=\"letter-spacing: 1.8px;\">·</span>&nbsp;Music Tech&nbsp;· Cyprus",
         "about.achievements.subtitle": "The industry speaks in numbers, so here are mine. I'd like to think I'm more than that.",
         "about.experience.subtitle": "The roles I've played so far.",
-        "footer.skills.title": "IF YOU ARE FROM THE STREET"
+        "footer.skills.title": "IF YOU ARE FROM THE STREET",
+        "footer.domains.1": "Product Management",
+        "footer.domains.5": "",
+        "footer.domains.6": "Sales Reporting &amp; Ad-Hoc Analysis",
+        "footer.domains.7": "",
+        "footer.domains.8": "Metadata &amp; Digital Asset Workflows",
+        "footer.domains.9": "Pricing &amp; Demand Analysis"
       }
     }
   },
