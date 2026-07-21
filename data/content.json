@@ -194,7 +194,7 @@
         "about.status": "COOCKING...<br>",
         "about.deck": "I help music and the people who make it earn what they deserve.&nbsp;<div>Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly&nbsp;in the past.&nbsp;</div><div>Now exploring how to be useful in the artist development game — with the skills that got me here, the ones I'm picking up along the way, and the personality that comes with them.</div>",
         "footer.credit.copy": "© 2026 muramets labs",
-        "footer.domains.title": "I CAN BE USEFUL IN",
+        "footer.domains.title": "IF YOU ARE CORPORATE",
         "footer.skills.1": "<br>",
         "footer.skills.2": "<br>",
         "footer.skills.3": "<br>",
@@ -204,7 +204,8 @@
         "footer.domains.4": "<br>",
         "about.kicker": "Product Management · OPERATIONS&nbsp;<span style=\"letter-spacing: 1.8px;\">·</span>&nbsp;Music Tech&nbsp;· Cyprus",
         "about.achievements.subtitle": "The industry speaks in numbers, so here are mine. I'd like to think I'm more than that.",
-        "about.experience.subtitle": "The roles I've played so far."
+        "about.experience.subtitle": "The roles I've played so far.",
+        "footer.skills.title": "IF YOU ARE FROM THE STREET"
       }
     }
   },
@@ -213,6 +214,14 @@
       "achievements",
       "experience",
       "contact"
+    ]
+  },
+  "footerCols": {
+    "/index.html": [
+      "domains",
+      "skills",
+      "contact",
+      "profiles"
     ]
   }
 }
