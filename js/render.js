@@ -1,9 +1,9 @@
 // Rendering: data → DOM. Pure output, no admin chrome — admin.js decorates
 // rendered entities separately when admin mode is on.
 
-import { ENTITY_TYPES } from './entities.js?v=32';
-import { store, currentPage } from './store.js?v=32';
-import { SEED } from './content.js?v=32';
+import { ENTITY_TYPES } from './entities.js?v=33';
+import { store, currentPage } from './store.js?v=33';
+import { SEED } from './content.js?v=33';
 
 /** Resolve current items for a collection: local override or seed. */
 export function getItems(name) {
