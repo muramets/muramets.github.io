@@ -213,6 +213,12 @@
   margin-left: 8px;
   position: relative;
 }
+/* Height is the one non-composited part of the disclosure. Temporarily
+   contain its layout work so Safari does not invalidate the full page tree. */
+.timeline-list.is-resizing {
+  contain: layout;
+  will-change: height;
+}
 
 /* A separate rail can dissolve exactly with the final visible role. A CSS
    border cannot be faded independently, which is why it used to stop hard. */
@@ -244,6 +250,49 @@
   );
 }
 
+/* In the final card's lower fade, the light passes above the disappearing
+   paper surface. This is a second, masked view of the same cursor field — it
+   begins around the bullets and never affects the readable part of the card. */
+.timeline-list.has-fade::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline: -340px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    ellipse 340px 260px at calc(var(--timeline-glow-x) + 340px) var(--timeline-glow-y),
+    rgba(60, 255, 208, 0.24) 0%,
+    rgba(60, 255, 208, 0.16) 22%,
+    rgba(60, 255, 208, 0.075) 44%,
+    rgba(60, 255, 208, 0.018) 68%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--timeline-rail-fade-start) - 24px),
+    rgba(0, 0, 0, 0.72) var(--timeline-rail-fade-start),
+    #000 calc(var(--timeline-rail-fade-start) + 48px),
+    #000 var(--timeline-rail-fade-end),
+    transparent calc(var(--timeline-rail-fade-end) + 72px)
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--timeline-rail-fade-start) - 24px),
+    rgba(0, 0, 0, 0.72) var(--timeline-rail-fade-start),
+    #000 calc(var(--timeline-rail-fade-start) + 48px),
+    #000 var(--timeline-rail-fade-end),
+    transparent calc(var(--timeline-rail-fade-end) + 72px)
+  );
+  transition: opacity 220ms cubic-bezier(0.22, 0.82, 0.28, 1);
+}
+.journey-layout__timeline.is-timeline-exploring .timeline-list.has-fade::after {
+  opacity: 1;
+}
+
 .timeline-item {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -265,8 +314,10 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 540px;
-  height: 400px;
+  /* Overscan the field beyond its visible falloff: the lower fade can reveal
+     light without exposing a rectangular raster edge beside Show more. */
+  width: 680px;
+  height: 520px;
   transform: translate(
     calc(var(--timeline-glow-x) - 50%),
     calc(var(--timeline-glow-y) - 50%)
@@ -274,14 +325,16 @@
   background: radial-gradient(
     ellipse at 58% 48%,
     rgba(60, 255, 208, 0.30) 0%,
+    rgba(60, 255, 208, 0.23) 20%,
     rgba(60, 255, 208, 0.12) 42%,
-    transparent 76%
+    rgba(60, 255, 208, 0.045) 64%,
+    rgba(60, 255, 208, 0.012) 82%,
+    transparent 100%
   );
-  filter: blur(22px);
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-  will-change: transform, scale, rotate;
+  will-change: auto;
   transition: opacity 260ms cubic-bezier(0.22, 0.82, 0.28, 1);
 }
 .journey-layout__timeline::after {
@@ -289,8 +342,8 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 420px;
-  height: 330px;
+  width: 560px;
+  height: 440px;
   transform: translate(
     calc(var(--timeline-glow-x) - 50% - 56px),
     calc(var(--timeline-glow-y) - 50% + 30px)
@@ -298,14 +351,16 @@
   background: radial-gradient(
     ellipse at 46% 55%,
     rgba(60, 255, 208, 0.20) 0%,
-    rgba(60, 255, 208, 0.07) 46%,
-    transparent 78%
+    rgba(60, 255, 208, 0.14) 22%,
+    rgba(60, 255, 208, 0.07) 44%,
+    rgba(60, 255, 208, 0.02) 66%,
+    rgba(60, 255, 208, 0.006) 82%,
+    transparent 100%
   );
-  filter: blur(32px);
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-  will-change: transform, scale, rotate;
+  will-change: auto;
   transition: opacity 320ms cubic-bezier(0.22, 0.82, 0.28, 1);
 }
 .journey-layout__timeline.is-timeline-exploring::before {
@@ -315,6 +370,17 @@
 .journey-layout__timeline.is-timeline-exploring::after {
   opacity: 1;
   animation: timeline-glow-morph-secondary 3.6s cubic-bezier(0.37, 0, 0.63, 1) infinite alternate;
+}
+.journey-layout__timeline.is-timeline-exploring::before,
+.journey-layout__timeline.is-timeline-exploring::after {
+  will-change: transform, scale, rotate, opacity;
+}
+/* Safari retains the cursor-following field, but not its two perpetual
+   morphing layers. Compositing those large translucent surfaces alongside a
+   long scrolling paper sheet is disproportionately expensive in WebKit. */
+html.is-webkit-safari .journey-layout__timeline.is-timeline-exploring::before,
+html.is-webkit-safari .journey-layout__timeline.is-timeline-exploring::after {
+  animation: none;
 }
 @keyframes timeline-glow-morph-primary {
   from { scale: 0.90 1.08; rotate: -2deg; }
@@ -349,17 +415,21 @@ body.page-about:not(.is-admin) .section--journey::before {
   background: radial-gradient(
     ellipse at 52% 48%,
     rgba(60, 255, 208, 0.16) 0%,
-    rgba(60, 255, 208, 0.055) 43%,
-    transparent 75%
+    rgba(60, 255, 208, 0.11) 24%,
+    rgba(60, 255, 208, 0.055) 45%,
+    rgba(60, 255, 208, 0.018) 66%,
+    transparent 84%
   );
-  filter: blur(22px);
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-  will-change: transform, opacity;
+  will-change: auto;
   transition: opacity 220ms cubic-bezier(0.22, 0.82, 0.28, 1);
 }
-body.page-about:not(.is-admin) .section--journey.is-journey-exploring::before { opacity: 1; }
+body.page-about:not(.is-admin) .section--journey.is-journey-exploring::before {
+  opacity: 1;
+  will-change: transform, opacity;
+}
 body.page-about:not(.is-admin) .section--journey > .journey-layout {
   position: relative;
   z-index: 1;

@@ -738,6 +738,24 @@
       animation-range: entry 0% entry 34%;
     }
 
+    /* WebKit turns a scroll-linked transform on this long, textured sheet
+       into one oversized composited layer. The physical overlap, paper edge
+       and shadow remain; native scrolling now pulls that sheet naturally,
+       while only the compact intro column receives an arrival motion. */
+    html.is-webkit-safari body.page-about:not(.is-admin) .section--journey {
+      animation-name: none;
+      transform: none;
+      box-shadow: 0 -22px 48px rgba(19, 19, 19, 0.14);
+    }
+    html.is-webkit-safari body.page-about:not(.is-admin) .section--journey .journey-layout {
+      animation-name: none;
+    }
+    html.is-webkit-safari body.page-about:not(.is-admin) .journey-layout__intro {
+      animation: journey-intro-arrive-webkit 1s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+      animation-timeline: --journey-chapter;
+      animation-range: entry 0% entry 34%;
+    }
+
   }
 
   @supports not (animation-timeline: view()) {
@@ -809,6 +827,11 @@
   to { transform: none; }
 }
 
+@keyframes journey-intro-arrive-webkit {
+  from { opacity: 0; transform: translateY(2svh); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes impact-card-surface-arrive {
   from {
     opacity: 0;
@@ -852,7 +875,7 @@
   background: var(--canvas-inverted);
   color: var(--inverted-text);
   padding: 56px var(--gutter);
-  padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
   margin-top: auto; /* sticky footer: pushes to the bottom on short pages */
 }
 
