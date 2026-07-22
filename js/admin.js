@@ -171,7 +171,7 @@ function removeOutro(node) {
    leak into saved HTML. */
 function cleanHTML(node) {
   const clone = node.cloneNode(true);
-  clone.querySelectorAll('.drag-handle, .entity-delete').forEach(el => el.remove());
+  clone.querySelectorAll('.drag-handle, .entity-delete, .entity-gradcap-toggle').forEach(el => el.remove());
   return clone.innerHTML;
 }
 
@@ -196,7 +196,7 @@ function lineNum(node) {
    textContent and must never count as content. */
 function lineText(node) {
   const clone = node.cloneNode(true);
-  clone.querySelectorAll('.drag-handle, .entity-delete').forEach(el => el.remove());
+  clone.querySelectorAll('.drag-handle, .entity-delete, .entity-gradcap-toggle').forEach(el => el.remove());
   return clone.textContent.trim();
 }
 
@@ -543,16 +543,39 @@ function onClickGuard(e) {
 function decorateEntities(name) {
   const { container } = pageState[name];
   container.querySelectorAll('[data-entity-id]').forEach(node => {
-    if (node.querySelector(':scope > .entity-delete')) return;
-    const btn = document.createElement('button');
-    btn.className = 'entity-delete';
-    btn.setAttribute('aria-label', 'Delete');
-    btn.textContent = '×';
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      deleteEntity(name, node.dataset.entityId);
-    });
-    node.append(btn, createHandle('Drag to reorder'));
+    if (!node.querySelector(':scope > .entity-delete')) {
+      const btn = document.createElement('button');
+      btn.className = 'entity-delete';
+      btn.setAttribute('aria-label', 'Delete');
+      btn.textContent = '×';
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        deleteEntity(name, node.dataset.entityId);
+      });
+      node.append(btn, createHandle('Drag to reorder'));
+    }
+
+    if (name === 'roles' && !node.querySelector(':scope > .entity-gradcap-toggle')) {
+      const capBtn = document.createElement('button');
+      capBtn.className = 'entity-gradcap-toggle';
+      capBtn.setAttribute('aria-label', 'Toggle Graduation Cap');
+      capBtn.title = 'Toggle Graduation Cap (Red Diploma)';
+      capBtn.textContent = '🎓';
+
+      const entity = findEntity('roles', node.dataset.entityId);
+      if (entity?.fields?.gradCap) capBtn.classList.add('is-active');
+
+      capBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        const ent = findEntity('roles', node.dataset.entityId);
+        if (!ent) return;
+        snapshotCollection('roles');
+        ent.fields.gradCap = !ent.fields.gradCap;
+        store.saveCollection('roles', pageState['roles'].items);
+        rerender('roles');
+      });
+      node.append(capBtn);
+    }
   });
 }
 

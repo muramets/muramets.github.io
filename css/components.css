@@ -199,8 +199,44 @@
   z-index: 1;
 }
 
-/* Timeline Rail reference: no dots — cards pin to the dashed rail
-   by their mono timestamps alone */
+/* Timeline Rail nodes & graduation cap badge */
+.timeline-dot {
+  position: absolute;
+  left: -42px;
+  top: 10px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(61, 0, 191, 0.35);
+  border: 2px solid var(--canvas);
+  box-shadow: 0 0 0 1px rgba(61, 0, 191, 0.35);
+  z-index: 2;
+  transition: transform 200ms ease, background-color 200ms ease, box-shadow 200ms ease;
+}
+
+.timeline-item:hover .timeline-dot {
+  transform: scale(1.4);
+  background: var(--verge-ultraviolet);
+  box-shadow: 0 0 0 2px var(--verge-ultraviolet);
+}
+
+.grad-cap-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  vertical-align: middle;
+  color: #ff2a5f;
+  transition: transform 200ms ease;
+}
+
+.timeline-item:hover .grad-cap-badge {
+  transform: scale(1.15) rotate(-5deg);
+}
+
+.grad-cap-badge svg {
+  display: block;
+}
 
 .timeline-meta {
   display: flex;
@@ -216,17 +252,14 @@
   line-height: 1.15;
   color: var(--primary-text);
   transition: color 200ms ease;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-/* Per-role hover accent for the title in the meta column */
-.timeline-item.accent-uv     { --role-color: var(--verge-ultraviolet); }
-.timeline-item.accent-mint   { --role-color: var(--jelly-mint); }
-/* acid yellow is unreadable on white — the title hovers in the system's
-   official link-hover token instead */
-.timeline-item.accent-yellow { --role-color: var(--deep-link-blue); }
-.timeline-item.accent-ink    { --role-color: var(--canvas-inverted); }
-
-.timeline-item:hover .timeline-meta h4 { color: var(--role-color); }
+.timeline-item:hover .timeline-meta h4 {
+  color: var(--verge-ultraviolet);
+}
 
 /* Card highlight: mint flood, black text — Timeline Rail reference */
 .timeline-item:hover .timeline-body {

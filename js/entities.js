@@ -38,7 +38,7 @@ function renderCard(entity) {
 
 /* Role title hover accents (official card palette). Card bodies are
    identical per the Timeline Rail reference — gray tile, mint hover. */
-const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-yellow', 'accent-ink'];
+const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-blue', 'accent-magenta'];
 
 /* "01/2025 — 07/2025" -> "6 months" (calendar difference, so a clean
    07/2025 — 07/2026 year reads "1 year", not "1 year 1 month").
@@ -79,10 +79,23 @@ export const ENTITY_TYPES = {
       const accent = ROLE_ACCENTS[index % ROLE_ACCENTS.length];
       const item = el('div', 'timeline-item ' + accent);
       item.dataset.entityId = entity.id;
+      item.id = entity.id;
+
+      // Anchor dot on the timeline rail
+      const dot = el('span', 'timeline-dot');
+      dot.setAttribute('aria-hidden', 'true');
 
       const meta = el('div', 'timeline-meta');
       const title = el('h4', '', f.title);
       title.dataset.field = 'title';
+
+      if (f.gradCap) {
+        const capBadge = el('span', 'grad-cap-badge');
+        capBadge.title = 'Graduated with honors';
+        capBadge.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ff2a5f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`;
+        title.append(capBadge);
+      }
+
       const company = el('p', 'timeline-company', f.company);
       company.dataset.field = 'company';
       const time = el('div', 'timeline-time', f.period);
@@ -103,15 +116,13 @@ export const ENTITY_TYPES = {
       });
       body.append(deck, bullets);
 
-      // optional closing line under the bullets, no list marker
-      // (admin: Shift+Enter from a bullet creates/edits it)
       if (f.outro != null) {
         const outro = el('p', 'timeline-outro', f.outro);
         outro.dataset.field = 'outro';
         body.append(outro);
       }
 
-      item.append(meta, body);
+      item.append(dot, meta, body);
       return item;
     },
     blank: () => ({

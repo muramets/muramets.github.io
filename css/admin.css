@@ -48,6 +48,34 @@
 
 .entity-delete:hover { background: #d00; }
 
+.entity-gradcap-toggle {
+  position: absolute;
+  top: 10px;
+  right: 44px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 150ms ease, background 150ms ease, transform 150ms ease;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.is-admin .timeline-item:hover .entity-gradcap-toggle { opacity: 1; }
+.entity-gradcap-toggle:hover { background: var(--verge-ultraviolet); transform: scale(1.1); }
+.entity-gradcap-toggle.is-active {
+  background: #ff2a5f;
+  opacity: 1;
+  box-shadow: 0 0 8px rgba(255, 42, 95, 0.5);
+}
+
 .timeline-item { position: relative; }
 
 /* Drag handles — appear on hover, entities top-left, blocks top-left */
