@@ -41,6 +41,60 @@ initMobileNav();
 initSectionBar();
 placeStatusForMobile();
 placeKickerInNav();
+initLinkedInModal();
+
+function initLinkedInModal() {
+  let overlay = null;
+
+  const createModal = targetUrl => {
+    overlay = document.createElement('div');
+    overlay.className = 'external-modal-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    overlay.innerHTML = `
+      <div class="external-modal" role="dialog" aria-modal="true" aria-labelledby="ext-modal-title">
+        <span class="external-modal-kicker">External Link · LinkedIn</span>
+        <h3 class="external-modal-title" id="ext-modal-title">You're going to shift your focus</h3>
+        <p class="external-modal-text">You are about to be redirected to LinkedIn profile:<br><span class="external-modal-url">${targetUrl}</span></p>
+        <div class="external-modal-actions">
+          <button type="button" class="external-modal-btn-cancel">Cancel</button>
+          <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="external-modal-btn-confirm">Continue to LinkedIn &rarr;</a>
+        </div>
+      </div>
+    `;
+    document.body.append(overlay);
+
+    const cancelBtn = overlay.querySelector('.external-modal-btn-cancel');
+    const confirmBtn = overlay.querySelector('.external-modal-btn-confirm');
+
+    const close = () => {
+      overlay.classList.remove('is-open');
+      overlay.setAttribute('aria-hidden', 'true');
+    };
+
+    cancelBtn.addEventListener('click', close);
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    confirmBtn.addEventListener('click', close);
+  };
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('.external-modal')) return;
+    const link = e.target.closest('a[href*="linkedin.com"]');
+    if (!link) return;
+    e.preventDefault();
+    const targetUrl = link.getAttribute('href') || 'https://www.linkedin.com/in/muramets/';
+    if (!overlay) {
+      createModal(targetUrl);
+    } else {
+      const urlSpan = overlay.querySelector('.external-modal-url');
+      const confirmBtn = overlay.querySelector('.external-modal-btn-confirm');
+      if (urlSpan) urlSpan.textContent = targetUrl;
+      if (confirmBtn) confirmBtn.href = targetUrl;
+    }
+    overlay.classList.add('is-open');
+    overlay.setAttribute('aria-hidden', 'false');
+  });
+}
 
 function placeKickerInNav() {
   const kicker = document.querySelector('.masthead-kicker');
@@ -112,7 +166,7 @@ function initMobileNav() {
 
   const cta = document.createElement('a');
   cta.className = 'drawer-cta';
-  cta.href = 'mailto:muramets007@gmail.com';
+  cta.href = 'mailto:muramets007@icloud.com';
   cta.textContent = 'Email Me';
 
   const mark = document.createElement('div');
@@ -202,6 +256,11 @@ document.addEventListener('click', e => {
   if (!anchor) return;
   const targetId = anchor.getAttribute('href').slice(1);
   if (!targetId) return;
+  if (targetId === 'top') {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   const targetEl = document.getElementById(targetId);
   if (targetEl) {
     e.preventDefault();
@@ -605,7 +664,7 @@ function initContactForm() {
     } else {
       const subject = encodeURIComponent(`Contact Form Submission from ${name}`);
       const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
-      window.location.href = `mailto:muramets007@gmail.com?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:muramets007@icloud.com?subject=${subject}&body=${body}`;
       if (btn) {
         btn.disabled = false;
         btn.textContent = originalText;

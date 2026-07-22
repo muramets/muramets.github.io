@@ -81,6 +81,12 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 150ms ease, background 150ms ease;
+}
+.btn-tag:hover {
+  transform: translateY(-1px);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -562,4 +568,130 @@
   .timeline-item { grid-template-columns: 1fr; gap: 10px; }
   .form-stack { grid-template-columns: 1fr; }
   .form-field.full-width { grid-column: span 1; }
+}
+
+/* ─────────────────────────────────────────────────────────
+   EXTERNAL LINK CONFIRMATION MODAL (The Verge Dark Style)
+───────────────────────────────────────────────────────── */
+.external-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: blur(12px) saturate(1.2);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+}
+
+.external-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.external-modal {
+  background: var(--canvas-inverted);
+  color: var(--inverted-text);
+  border-radius: var(--radius-tile);
+  padding: 32px 36px;
+  max-width: 460px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  transform: translateY(16px) scale(0.97);
+  transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.external-modal-overlay.is-open .external-modal {
+  transform: translateY(0) scale(1);
+}
+
+.external-modal-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--jelly-mint);
+}
+
+.external-modal-title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--hazard-white);
+  margin: 0;
+}
+
+.external-modal-text {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+}
+
+.external-modal-url {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--jelly-mint);
+  word-break: break-all;
+}
+
+.external-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.external-modal-btn-confirm {
+  background: var(--jelly-mint);
+  color: var(--absolute-black);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 12px 22px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.external-modal-btn-confirm:hover {
+  transform: translateY(-1px);
+  opacity: 0.9;
+}
+
+.external-modal-btn-cancel {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  padding: 12px 16px;
+  border: none;
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+.external-modal-btn-cancel:hover {
+  color: var(--hazard-white);
 }
