@@ -688,13 +688,13 @@ function initJourneyExplorerGlow() {
 
   const getGlowPoint = sample => {
     const rect = surfaceRect || (surfaceRect = surface.getBoundingClientRect());
-    // The sheet clips its own field at the paper edge. Keep the centre far
-    // enough inside that the last visible colour has already dissolved before
-    // that crop — the cursor still leads the field, but never exposes a seam.
-    const edgeInset = Math.min(220, rect.width * 0.24);
+    // 4-side mathematical inset anchor: keeps section glow spotlight center far enough
+    // from boundaries so radial light dissolves naturally before touching edges.
+    const insetX = Math.min(280, rect.width * 0.32);
+    const insetY = Math.min(180, rect.height * 0.15);
     return {
-      x: Math.min(rect.width - edgeInset, Math.max(edgeInset, sample.x - rect.left)),
-      y: Math.min(rect.height, Math.max(0, sample.y - rect.top)),
+      x: Math.max(insetX, Math.min(rect.width - insetX, sample.x - rect.left)),
+      y: Math.max(insetY, Math.min(rect.height - insetY, sample.y - rect.top)),
     };
   };
 
@@ -866,13 +866,13 @@ function initTimelineCollapse() {
 
     const getGlowPoint = sample => {
       const rect = timelineRect || (timelineRect = timelineSurface.getBoundingClientRect());
-      // The field may cross the card gutters too; the cards stay above it,
-      // so the light only becomes visible in the breathing room between them.
-      // It also evaporates before the paper's right crop rather than revealing
-      // the edge of its translucent compositor layer.
-      const edgeInset = Math.min(380, rect.width * 0.42);
-      const x = Math.min(rect.width - edgeInset, Math.max(edgeInset, sample.x - rect.left));
-      const y = Math.max(0, Math.min(rect.height, sample.y - rect.top));
+      // 4-side mathematical inset anchor: keeps the glow center far enough (insetX/insetY)
+      // from all boundaries (left rail/bullets, right paper, top, bottom) so the 340px radial
+      // glow circle dissolves organically to 0% opacity before touching any edge.
+      const insetX = Math.min(280, rect.width * 0.32);
+      const insetY = Math.min(180, rect.height * 0.15);
+      const x = Math.max(insetX, Math.min(rect.width - insetX, sample.x - rect.left));
+      const y = Math.max(insetY, Math.min(rect.height - insetY, sample.y - rect.top));
       return { x, y };
     };
 
