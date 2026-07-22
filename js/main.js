@@ -42,6 +42,7 @@ initSectionBar();
 placeStatusForMobile();
 placeKickerInNav();
 initLinkedInModal();
+initLenisScroll();
 
 function initLinkedInModal() {
   let overlay = null;
@@ -251,20 +252,46 @@ if ('scrollRestoration' in history) {
 }
 
 // Smooth scroll handler for anchor links
+let lenisInstance = null;
+
+function initLenisScroll() {
+  if (typeof Lenis === 'undefined') return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  lenisInstance = new Lenis({
+    autoRaf: true,
+    lerp: 0.08,
+    smoothWheel: true,
+    wheelMultiplier: 0.9,
+    smoothTouch: false,
+    syncTouch: false,
+  });
+}
+
+// Smooth scroll handler for anchor links with Lenis integration
 document.addEventListener('click', e => {
+  if (e.target.closest('.external-modal')) return;
   const anchor = e.target.closest('a[href^="#"]');
   if (!anchor) return;
   const targetId = anchor.getAttribute('href').slice(1);
   if (!targetId) return;
   if (targetId === 'top') {
     e.preventDefault();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (lenisInstance) {
+      lenisInstance.scrollTo(0, { duration: 1.2 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     return;
   }
   const targetEl = document.getElementById(targetId);
   if (targetEl) {
     e.preventDefault();
-    targetEl.scrollIntoView({ behavior: 'smooth' });
+    if (lenisInstance) {
+      lenisInstance.scrollTo(targetEl, { duration: 1.2, offset: -24 });
+    } else {
+      targetEl.scrollIntoView({ behavior: 'smooth' });
+    }
     history.pushState(null, '', `#${targetId}`);
   }
 });
