@@ -104,7 +104,7 @@ test('Contact perspective keeps the Journey intro in normal scroll flow', async 
   assert.doesNotMatch(timeline, /initJourneyContactHold/);
 });
 
-test('the fold reserves Journey height and applies the control ceiling before a visible resize', async () => {
+test('the fold collapses Journey in normal flow without playing its own perspective', async () => {
   const [timeline, geometry, components, layout] = await Promise.all([
     read('js/features/journey/index.js'),
     read('js/features/journey/timeline-geometry.js'),
@@ -113,22 +113,27 @@ test('the fold reserves Journey height and applies the control ceiling before a 
   ]);
 
   assert.match(timeline, /renderTimelineFoldFrame/);
-  assert.match(timeline, /setJourneySurfaceHold\(0\)/);
-  assert.match(timeline, /setJourneySurfaceHold\(frame\.reservedHeight\)/);
+  assert.match(timeline, /is-journey-folded/);
   assert.match(timeline, /getFoldScrollLimit/);
   assert.match(timeline, /lenis\.scrollTo\(target, \{ immediate: true, force: true \}\)/);
   assert.doesNotMatch(timeline, /lenis\.setScroll\?\./);
   assert.match(timeline, /scroll-behavior', 'auto', 'important'/);
   assert.match(timeline, /freezeJourneyPresentation\(\);\s+useInstantNativeScroll\(\);/);
-  assert.match(timeline, /applyControlCeiling\(plan, startScroll, frame\.reservedHeight, eased\);\s+setJourneySurfaceHold/);
+  // The auto-fold never writes its own tilt/depth: the perspective is only
+  // ever the native scroll-linked animation, resumed on the visitor's next
+  // manual scroll (see retainFoldedPresentationUntilIntent).
+  assert.doesNotMatch(timeline, /applyFoldPerspective|foldPerspectiveProgress|FOLD_COMPACT_PHASE_RATIO|SHEET_FOLD_TILT_MAX_DEG|SHEET_FOLD_DEPTH_MAX_PX/);
+  assert.match(timeline, /const eased = foldEase\(progress\);/);
+  assert.match(timeline, /renderTimelineFoldFrame\(plan, eased\);\s+const expectedScroll = applyControlCeiling\(plan, startScroll, eased\);/);
   assert.match(timeline, /syncLenisAfterLayout\(plan\.targetScroll\);/);
   assert.match(timeline, /journeyfolddebugstart/);
   assert.match(timeline, /journeyfolddebugend/);
   assert.match(geometry, /export function getCollapseFrame/);
   assert.match(geometry, /export function getFoldScrollLimit/);
   assert.match(geometry, /finalMaxScroll/);
-  assert.match(components, /\.timeline-fold-reservation/);
-  assert.match(layout, /--journey-fold-contact-shift/);
+  assert.doesNotMatch(timeline + components, /foldReservation|setJourneySurfaceHold|timeline-fold-reservation/);
+  assert.doesNotMatch(layout, /--journey-fold-contact-shift/);
+  assert.match(layout, /is-journey-folded:not\(\.is-admin\) #contact/);
   assert.match(layout, /--journey-fold-sheet-transform/);
   assert.match(layout, /--journey-paper-layer: 6/);
   assert.match(layout, /--contact-paper-layer: 7/);

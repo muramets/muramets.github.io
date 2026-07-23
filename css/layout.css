@@ -397,12 +397,33 @@ body.page-about:not(.is-admin) #contact > .section-container {
   z-index: 1;
 }
 
-/* The hidden normal-flow reservation keeps Journey tall. Contact receives
-   only the matching visual translation; every depth property already exists
-   before the control is clicked. */
+/* Contact is frozen at its entry perspective while the fold runs, but its
+   position remains normal flow so it follows Journey's real collapse. */
 body.page-about.is-journey-collapsing:not(.is-admin) #contact {
   pointer-events: none;
-  transform: translateY(var(--journey-fold-contact-shift, 0px));
+  transform: var(--contact-fold-entry-transform, var(--contact-sheet-transform, none))
+    translateY(var(--journey-fold-contact-seam-shift, 0px));
+}
+
+/* The folded composition is an intentional settled state. Holding these
+   pixels prevents the scroll-linked arrival animations from replaying after
+   the compact fold has already placed both paper edges at their seam. */
+body.page-about.is-journey-folded:not(.is-admin) .section--journey {
+  animation: none;
+  transform: var(--journey-fold-sheet-transform, none);
+  opacity: var(--journey-fold-sheet-opacity, 1);
+}
+
+body.page-about.is-journey-folded:not(.is-admin) .section--journey .journey-layout {
+  animation: none;
+  transform: var(--journey-fold-layout-transform, none);
+  opacity: var(--journey-fold-layout-opacity, 1);
+}
+
+body.page-about.is-journey-folded:not(.is-admin) #contact {
+  animation: none;
+  transform: var(--contact-fold-entry-transform, none)
+    translateY(var(--journey-fold-contact-seam-shift, 0px));
 }
 
 .section-container {
@@ -806,12 +827,13 @@ body.page-about.is-journey-collapsing:not(.is-admin) #contact {
     /* Contact's own arrival animation writes `transform` continuously, and a
        running/filled CSS animation always wins over a plain declaration on
        the same element — it would silently swallow the fold's
-       --journey-fold-contact-shift translateY otherwise. Stop the animation
-       and compose the fold's translation on top of the frozen entry pixels,
-       the same freeze-then-compose approach used for the Journey sheet. */
+       --contact-fold-entry-transform would otherwise be replaced by the
+       changing entry pixels. Stop it and preserve that frozen frame while
+       normal document flow moves Contact with Journey. */
     body.page-about.is-journey-collapsing:not(.is-admin) #contact {
       animation: none;
-      transform: var(--contact-fold-entry-transform, none) translateY(var(--journey-fold-contact-shift, 0px));
+      transform: var(--contact-fold-entry-transform, none)
+        translateY(var(--journey-fold-contact-seam-shift, 0px));
     }
 
     /* Freeze each scroll-driven Journey layer at the pixels it had when the

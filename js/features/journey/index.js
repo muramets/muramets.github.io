@@ -11,6 +11,7 @@ import {
   getFoldScrollLimit,
 } from './timeline-geometry.js';
 import { mountTimelineGlow } from './timeline-glow.js';
+import { getContactApproachSettle, getContactSheetTransform } from '../journey-contact-hold.js';
 
 const REVEAL_DURATION_MS = 520;
 const FOLD_DURATION_MS = 1500;
@@ -24,15 +25,14 @@ const foldEase = t => (t < 0.5
   ? 4 * t * t * t
   : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
-// The fold's own perspective borrows the entry sheet's grammar (perspective +
-// rotateX around the bottom edge, see journey-sheet-settle) rather than
-// inventing a second 3D treatment. It rises and returns to flat across the
-// same eased fold clock as the list, so it starts at the frozen entry frame
-// and ends exactly on the flat compact composition — nothing to visibly
-// reset once the variables are removed after commit.
-const SHEET_FOLD_TILT_MAX_DEG = 1.6;
-const SHEET_FOLD_DEPTH_MAX_PX = -12;
-const foldPerspectiveProgress = eased => Math.sin(Math.PI * eased);
+// The auto-fold is a flat, click-driven gesture: it only ever releases list
+// height and trails scroll to match. It never plays the paper's own 3D
+// perspective — that belongs solely to the native scroll-linked entry/exit
+// animation (journey-sheet-settle/exit in layout.css), which stays frozen for
+// the whole gesture (see freezeJourneyPresentation) and only resumes once the
+// visitor actually scrolls by hand afterwards (retainFoldedPresentationUntilIntent).
+// That is deliberate: the perspective should read as "the page responding to
+// your scroll", never as something the click itself triggered.
 
 const noOpController = Object.freeze({
   destroy() {},
@@ -63,7 +63,9 @@ export function mountJourneyTimeline({
   let visibleCount = COMPACT_ROLE_COUNT;
   let foldToken = 0;
   let destroyed = false;
-  let foldReservation = null;
+  let foldStartSeam = null;
+  let foldContactStartSettle = 1;
+  let clearFoldedPresentationIntent = null;
   const debug = createJourneyDebug();
 
   const control = document.createElement('button');
@@ -73,15 +75,15 @@ export function mountJourneyTimeline({
   control.setAttribute('aria-controls', ensureListId(list));
   list.after(control);
 
-  // The contact sheet is the only surface that must visually travel through
-  // the temporary reserved Journey height. It never becomes fixed or cloned;
-  // the normal-flow section receives an equal, transient translation only
-  // while the reservation exists.
+  // Contact remains a normal-flow sheet throughout the fold. As Journey loses
+  // timeline height, Contact follows its real lower edge — no clone, fixed
+  // layer, reservation, or compensating translation.
   const contact = document.getElementById('contact');
-  const originalContactFoldShift = contact?.style.getPropertyValue('--journey-fold-contact-shift') ?? '';
-  const originalContactFoldShiftPriority = contact?.style.getPropertyPriority('--journey-fold-contact-shift') ?? '';
+  const introEl = section.querySelector('.journey-layout__intro');
   const originalContactFoldEntryTransform = contact?.style.getPropertyValue('--contact-fold-entry-transform') ?? '';
   const originalContactFoldEntryTransformPriority = contact?.style.getPropertyPriority('--contact-fold-entry-transform') ?? '';
+  const originalContactFoldSeamShift = contact?.style.getPropertyValue('--journey-fold-contact-seam-shift') ?? '';
+  const originalContactFoldSeamShiftPriority = contact?.style.getPropertyPriority('--journey-fold-contact-seam-shift') ?? '';
   const root = document.documentElement;
   const originalRootScrollBehavior = root.style.getPropertyValue('scroll-behavior');
   const originalRootScrollBehaviorPriority = root.style.getPropertyPriority('scroll-behavior');
@@ -280,25 +282,17 @@ export function mountJourneyTimeline({
       section.style.setProperty('--journey-fold-layout-transform', layoutStyle.transform);
       section.style.setProperty('--journey-fold-layout-opacity', layoutStyle.opacity);
     }
-    // Contact carries its own entry-arrival transform (mirroring Journey's
-    // own arrival over Impact). That animation is stopped for the fold too,
-    // so its current pixels have to be frozen here as well — otherwise the
-    // fold's --journey-fold-contact-shift translateY would compose against
-    // `none` instead of whatever tilt Contact's own approach was showing.
+    // Contact must meet Journey's actual visual edge, not retain its own
+    // entry-perspective offset forever — but it must not snap away whatever
+    // paper-arrival tilt it already had the instant before the click either.
+    // Freeze exactly that starting settle fraction; the fold's own rAF loop
+    // eases it the rest of the way to flat (see animateCollapse).
     if (contact) {
-      contact.style.setProperty('--contact-fold-entry-transform', getComputedStyle(contact).transform);
+      const seam = getFoldSeamMetrics();
+      foldContactStartSettle = introEl ? getContactApproachSettle({ contact, intro: introEl }) : 1;
+      contact.style.setProperty('--contact-fold-entry-transform', getContactSheetTransform(foldContactStartSettle));
+      contact.style.setProperty('--journey-fold-contact-seam-shift', `${seam.contactSeamShift.toFixed(3)}px`);
     }
-  }
-
-  // Writes this frame's fold perspective. Skipped on WebKit Safari: that
-  // browser already drops the entry's scroll-linked transform for
-  // compositing cost on this long, textured sheet (see the WebKit override
-  // in layout.css), so it must not pay for a per-frame transform here either.
-  function applyFoldPerspective(eased) {
-    if (isWebKitSafari) return;
-    const progress = foldPerspectiveProgress(eased);
-    section.style.setProperty('--journey-fold-tilt', `${(SHEET_FOLD_TILT_MAX_DEG * progress).toFixed(3)}deg`);
-    section.style.setProperty('--journey-fold-depth', `${(SHEET_FOLD_DEPTH_MAX_PX * progress).toFixed(2)}px`);
   }
 
   function releaseJourneyPresentation() {
@@ -345,7 +339,42 @@ export function mountJourneyTimeline({
         originalContactFoldEntryTransform,
         originalContactFoldEntryTransformPriority,
       );
+      restoreFoldProperty(
+        contact,
+        '--journey-fold-contact-seam-shift',
+        originalContactFoldSeamShift,
+        originalContactFoldSeamShiftPriority,
+      );
     }
+  }
+
+  function releaseFoldedPresentation() {
+    clearFoldedPresentationIntent?.();
+    clearFoldedPresentationIntent = null;
+    document.body.classList.remove('is-journey-folded');
+    releaseJourneyPresentation();
+  }
+
+  function retainFoldedPresentationUntilIntent() {
+    clearFoldedPresentationIntent?.();
+    document.body.classList.add('is-journey-folded');
+
+    // Do not immediately re-enable the view timelines: Lenis still has the
+    // fold's final coordinate in flight, which would replay both entries for
+    // a frame. The next genuine user navigation is the correct handoff back
+    // to the regular scroll-driven paper perspective.
+    const release = () => releaseFoldedPresentation();
+    const options = { once: true, passive: true };
+    window.addEventListener('wheel', release, options);
+    window.addEventListener('touchstart', release, options);
+    window.addEventListener('pointerdown', release, options);
+    window.addEventListener('keydown', release, { once: true });
+    clearFoldedPresentationIntent = () => {
+      window.removeEventListener('wheel', release);
+      window.removeEventListener('touchstart', release);
+      window.removeEventListener('pointerdown', release);
+      window.removeEventListener('keydown', release);
+    };
   }
 
   function createJourneyDebug() {
@@ -364,6 +393,29 @@ export function mountJourneyTimeline({
         this.final = null;
         this.startedAt = null;
         this.endedAt = null;
+      },
+      summary() {
+        const prepared = this.frames.find(frame => frame.stage === 'prepared') ?? null;
+        const lastMotionFrame = this.frames.filter(frame => frame.stage === 'collapsing').at(-1) ?? null;
+        const contactTransformDrift = this.frames
+          .map(frame => frame.contactLift)
+          .filter(Number.isFinite);
+        const collapseErrors = this.frames
+          .map(frame => Math.abs(frame.journeyCollapseError ?? NaN))
+          .filter(Number.isFinite);
+
+        return {
+          plan: this.plan,
+          prepared,
+          lastMotionFrame,
+          maxContactTransformDrift: contactTransformDrift.length
+            ? Math.round(Math.max(...contactTransformDrift.map(Math.abs)))
+            : null,
+          largestJourneyCollapseError: collapseErrors.length
+            ? Math.round(Math.max(...collapseErrors))
+            : null,
+          final: this.final,
+        };
       },
     };
     window.__journeyFoldDebug = state;
@@ -393,7 +445,41 @@ export function mountJourneyTimeline({
     });
   }
 
-  function recordDebugFrame({ plan, frame, expectedScroll, stage }) {
+  function getDocumentTop(node) {
+    let top = 0;
+    let current = node;
+    while (current) {
+      top += current.offsetTop;
+      current = current.offsetParent;
+    }
+    return top;
+  }
+
+  function getFoldSeamMetrics() {
+    const journeyRect = section.getBoundingClientRect();
+    const contactRect = contact?.getBoundingClientRect() ?? null;
+    const journeyFlowTop = getDocumentTop(section) - window.scrollY;
+    const journeyFlowBottom = journeyFlowTop + section.offsetHeight;
+    const contactFlowTop = contact ? getDocumentTop(contact) - window.scrollY : null;
+
+    return {
+      journeyFlowBottom,
+      journeyVisualOffset: journeyRect.bottom - journeyFlowBottom,
+      contactFlowTop,
+      contactVisualOffset: contactRect && contactFlowTop !== null
+        ? contactRect.top - contactFlowTop
+        : null,
+      journeyFlowHeight: section.offsetHeight,
+      flowGap: contactFlowTop === null ? null : contactFlowTop - journeyFlowBottom,
+      visualGap: contactRect ? contactRect.top - journeyRect.bottom : null,
+      // Contact is flattened during the fold. This is the one static
+      // correction that makes that flat sheet meet Journey's frozen visual
+      // lower edge exactly, instead of preserving an entry-perspective gap.
+      contactSeamShift: contactFlowTop === null ? 0 : journeyRect.bottom - contactFlowTop,
+    };
+  }
+
+  function recordDebugFrame({ plan, frame, expectedScroll, stage, timing = null }) {
     if (!debug) return;
     const journey = section.getBoundingClientRect();
     const layout = section.querySelector('.journey-layout')?.getBoundingClientRect();
@@ -401,56 +487,52 @@ export function mountJourneyTimeline({
     const introRect = section.querySelector('.journey-layout__intro')?.getBoundingClientRect();
     const contactRect = contact?.getBoundingClientRect();
     const scroll = Math.round(window.scrollY);
+    const seam = getFoldSeamMetrics();
+    const contactLift = foldStartSeam?.contactVisualOffset != null && seam.contactVisualOffset != null
+      ? foldStartSeam.contactVisualOffset - seam.contactVisualOffset
+      : null;
+    const journeyExitDelta = foldStartSeam
+      ? seam.journeyVisualOffset - foldStartSeam.journeyVisualOffset
+      : null;
+    const journeyCollapse = foldStartSeam
+      ? foldStartSeam.journeyFlowHeight - seam.journeyFlowHeight
+      : null;
     debug.frames.push({
       ms: debugElapsed(),
       stage,
+      progress: timing ? Number(timing.progress.toFixed(4)) : null,
+      eased: timing ? Number(timing.eased.toFixed(4)) : null,
       expectedScroll,
       actualScroll: scroll,
       controlBottom: Math.round(controlRect.bottom),
       introTop: introRect ? Math.round(introRect.top) : null,
       contactTop: contactRect ? Math.round(contactRect.top) : null,
       listHeight: Math.round(list.getBoundingClientRect().height),
-      reservedHeight: frame.reservedHeight,
+      releasedHeight: frame.releasedHeight,
       journeyDocBottom: Math.round(journey.bottom + scroll),
       layoutDocBottom: layout ? Math.round(layout.bottom + scroll) : null,
+      flowGap: seam.flowGap === null ? null : Math.round(seam.flowGap),
+      visualGap: seam.visualGap === null ? null : Math.round(seam.visualGap),
+      contactSeamShift: Math.round(seam.contactSeamShift),
+      contactLift: contactLift === null ? null : Math.round(contactLift),
+      expectedContactLift: 0,
+      contactLiftError: contactLift === null
+        ? null
+        : Math.round(contactLift),
+      journeyCollapse: journeyCollapse === null ? null : Math.round(journeyCollapse),
+      expectedJourneyCollapse: frame.releasedHeight,
+      journeyCollapseError: journeyCollapse === null
+        ? null
+        : Math.round(journeyCollapse - frame.releasedHeight),
+      journeyExitDelta: journeyExitDelta === null ? null : Math.round(journeyExitDelta),
+      journeyTransform: getComputedStyle(section).transform,
+      contactTransform: contact ? getComputedStyle(contact).transform : null,
       ...getLenisDebugState(),
     });
     // These events let DevTools users wait for results without polling rAF.
     window.dispatchEvent(new CustomEvent('journeyfolddebugframe', {
       detail: debug.frames[debug.frames.length - 1],
     }));
-  }
-
-  function createFoldReservation() {
-    if (foldReservation) return foldReservation;
-    foldReservation = document.createElement('div');
-    foldReservation.className = 'timeline-fold-reservation';
-    foldReservation.setAttribute('aria-hidden', 'true');
-    control.after(foldReservation);
-    return foldReservation;
-  }
-
-  // This owns the Journey sheet, not the timeline. Keeping this write outside
-  // the list renderer is deliberate: the paper surface and sticky heading
-  // must not follow the collapsing list's transient height.
-  function setJourneySurfaceHold(height) {
-    createFoldReservation().style.height = `${height}px`;
-    if (contact) contact.style.setProperty('--journey-fold-contact-shift', `-${height}px`);
-  }
-
-  function releaseJourneySurfaceHold() {
-    foldReservation?.remove();
-    foldReservation = null;
-    if (!contact) return;
-    if (originalContactFoldShift) {
-      contact.style.setProperty(
-        '--journey-fold-contact-shift',
-        originalContactFoldShift,
-        originalContactFoldShiftPriority,
-      );
-    } else {
-      contact.style.removeProperty('--journey-fold-contact-shift');
-    }
   }
 
   function syncLenisAfterLayout(scroll) {
@@ -469,24 +551,23 @@ export function mountJourneyTimeline({
     return frame;
   }
 
-  function applyControlCeiling(plan, startScroll, reservedHeight, eased) {
-    const target = getFoldScrollLimit({
-      plan,
-      startScroll,
-      reservedHeight,
-      eased,
-    });
+  function applyControlCeiling(plan, startScroll, eased) {
+    // The page is genuinely shorter in this frame, so Lenis must read its new
+    // bounds before it receives the matching scroll coordinate.
+    getLenis()?.resize?.();
+    const target = getFoldScrollLimit({ plan, startScroll, eased });
     applyScroll(target);
     return target;
   }
 
   /**
-   * Keep Journey's real grid footprint fixed during the visual fold. The list
-   * gives its released height to a normal-flow reservation after the control;
-   * meanwhile Contact takes the inverse visual offset. That lets the heading's
-   * native sticky containing block remain stable without changing the final
-   * composition. The control position becomes a per-frame scroll ceiling:
-   * it can approach, but never pass, its compact viewport location.
+   * Journey loses the released list height and Contact follows its true
+   * lower edge in real document flow, so their seam stays physically
+   * continuous in every frame. Scroll rides the same eased clock as that
+   * release (see getFoldScrollLimit), so the seam is visibly travelling for
+   * the whole gesture instead of sitting on a hold-then-jump ceiling. No 3D
+   * perspective plays here — see the note above on why that stays out of the
+   * click-driven gesture entirely.
    */
   function animateCollapse(plan) {
     const startScroll = window.scrollY;
@@ -497,39 +578,57 @@ export function mountJourneyTimeline({
       debug.plan = { ...plan, startScroll: Math.round(startScroll) };
       window.dispatchEvent(new CustomEvent('journeyfolddebugstart', { detail: debug.plan }));
     }
+    foldStartSeam = getFoldSeamMetrics();
     list.classList.add('is-resizing');
     list.style.height = `${plan.expandedHeight}px`;
     list.style.overflow = 'hidden';
     list.style.transition = 'none';
-    setJourneySurfaceHold(0);
     // Establish the ceiling before the first visible height mutation. This
     // handles a click made with the control already above its final anchor.
-    const initialScroll = applyControlCeiling(plan, startScroll, 0, 0);
+    const initialScroll = applyControlCeiling(plan, startScroll, 0);
     recordDebugFrame({
       plan,
-      frame: { reservedHeight: 0 },
+      frame: { releasedHeight: 0 },
       expectedScroll: initialScroll,
       stage: 'prepared',
     });
+    if (debug) {
+      // eslint-disable-next-line no-console
+      console.log('[journey-fold:prepared]', debug.frames[debug.frames.length - 1]);
+    }
 
     return new Promise(resolve => {
       const startedAt = performance.now();
+      let loggedStart = false;
       const step = now => {
         if (destroyed || token !== foldToken) {
           resolve(false);
           return;
         }
-        const progress = Math.min(1, (now - startedAt) / FOLD_DURATION_MS);
+        const progress = Math.max(0, Math.min(1, (now - startedAt) / FOLD_DURATION_MS));
         const eased = foldEase(progress);
         const frame = getCollapseFrame(plan, eased);
-        // Claim this frame's scroll before writing geometry. The old sequence
-        // wrote the shorter list first, leaving Lenis one paint to show the
-        // Journey sheet above its limit before it was corrected at the end.
-        const expectedScroll = applyControlCeiling(plan, startScroll, frame.reservedHeight, eased);
-        setJourneySurfaceHold(frame.reservedHeight);
+        // Shrink Journey first, then synchronise Lenis with the new document
+        // bounds in this same animation frame. Contact follows the resulting
+        // flow position instead of receiving an independent translation.
         renderTimelineFoldFrame(plan, eased);
-        applyFoldPerspective(eased);
-        recordDebugFrame({ plan, frame, expectedScroll, stage: 'folding' });
+        const expectedScroll = applyControlCeiling(plan, startScroll, eased);
+        if (contact) {
+          const contactSettle = foldContactStartSettle + (1 - foldContactStartSettle) * eased;
+          contact.style.setProperty('--contact-fold-entry-transform', getContactSheetTransform(contactSettle));
+        }
+        recordDebugFrame({
+          plan,
+          frame,
+          expectedScroll,
+          stage: 'collapsing',
+          timing: { progress, eased },
+        });
+        if (debug && !loggedStart) {
+          // eslint-disable-next-line no-console
+          console.log('[journey-fold:collapsing]', debug.frames[debug.frames.length - 1]);
+          loggedStart = true;
+        }
         if (progress < 1) requestAnimationFrame(step);
         else resolve(true);
       };
@@ -538,6 +637,11 @@ export function mountJourneyTimeline({
   }
 
   async function revealNextRoles() {
+    // A completed fold deliberately keeps the two sheets static, preventing
+    // their view-timeline entry geometries from replaying at the seam. The
+    // explicit expansion is also a valid handoff back to normal scroll
+    // presentation.
+    releaseFoldedPresentation();
     const previousCount = visibleCount;
     const fromHeight = reducedMotion ? 0 : list.offsetHeight;
     const contextRole = items[previousCount - 1];
@@ -569,6 +673,7 @@ export function mountJourneyTimeline({
       renderVisibleItems();
       // Land on the same composed position, just without the motion.
       if (plan) syncLenisAfterLayout(plan.targetScroll);
+      retainFoldedPresentationUntilIntent();
       phase = JOURNEY_PHASE.COMPACT;
       return;
     }
@@ -586,15 +691,15 @@ export function mountJourneyTimeline({
     document.body.classList.add('is-journey-collapsing', 'is-timeline-folding');
     window.dispatchEvent(new Event('timelinefoldstart'));
 
+    let retainFoldPresentation = false;
     try {
       const completed = await animateCollapse(plan);
       if (!completed) return;
-      // Commit compact roles while their measured height is still present.
-      // Removing the reservation and Contact offset in this same task swaps
-      // the temporary footprint for the real compact DOM pixel-for-pixel.
+      // Commit compact roles while the measured compact height is still
+      // present. Journey and Contact already occupy their final flow
+      // positions, so this is a content commit rather than a geometry swap.
       visibleCount = COMPACT_ROLE_COUNT;
       renderVisibleItems();
-      releaseJourneySurfaceHold();
       list.classList.remove('is-resizing', 'is-collapsing');
       list.style.height = list.style.overflow = list.style.transition = '';
       list.style.removeProperty('--timeline-collapse-fade');
@@ -605,18 +710,22 @@ export function mountJourneyTimeline({
       syncLenisAfterLayout(plan.targetScroll);
       recordDebugFrame({
         plan,
-        frame: { reservedHeight: 0 },
+        frame: { releasedHeight: plan.heightDelta },
         expectedScroll: plan.targetScroll,
         stage: 'compact',
       });
       phase = JOURNEY_PHASE.COMPACT;
       setControlState();
+      // Keep the compact pixels that just landed. Re-enabling the underlying
+      // view timelines here would replay both sheets' entry geometry for a
+      // frame at the final scroll coordinate.
+      retainFoldedPresentationUntilIntent();
+      retainFoldPresentation = true;
     } finally {
       foldToken++;
-      releaseJourneySurfaceHold();
       list.classList.remove('is-resizing', 'is-collapsing');
       document.body.classList.remove('is-journey-collapsing', 'is-timeline-folding');
-      releaseJourneyPresentation();
+      if (!retainFoldPresentation) releaseJourneyPresentation();
       restoreNativeScrollBehavior();
       document.documentElement.style.overflowAnchor = originalOverflowAnchor;
       window.dispatchEvent(new Event('timelinefoldend'));
@@ -630,6 +739,8 @@ export function mountJourneyTimeline({
           ...getLenisDebugState(),
         };
         window.dispatchEvent(new CustomEvent('journeyfolddebugend', { detail: debug }));
+        // eslint-disable-next-line no-console
+        console.log('[journey-fold:complete]', debug.summary());
       }
     }
   }
@@ -646,17 +757,13 @@ export function mountJourneyTimeline({
   renderVisibleItems();
 
   // Ad-hoc diagnostics for the Journey→Contact seam, opt-in behind the same
-  // ?journey-debug=1 flag as the fold harness. Logs on every scroll
-  // (rAF-throttled) so the overlap/paint state can be inspected directly in
-  // the console while scrolling by hand.
+  // query flag. Keep this callable rather than logging every scroll: the
+  // fold checkpoints are useful, while a console flood obscures them.
   if (debug) {
-    let holdDebugFrame = null;
-    const logHoldState = () => {
-      holdDebugFrame = null;
+    debug.seam = () => {
       const contactRect = contact?.getBoundingClientRect();
       const journeyRect = section.getBoundingClientRect();
-      // eslint-disable-next-line no-console
-      console.log('[journey-hold]', {
+      return {
         scrollY: Math.round(window.scrollY),
         contactTop: contactRect ? Math.round(contactRect.top) : null,
         sectionTop: Math.round(journeyRect.top),
@@ -668,13 +775,9 @@ export function mountJourneyTimeline({
         journeyTransform: getComputedStyle(section).transform,
         contactTransform: contact ? getComputedStyle(contact).transform : null,
         contactMarginTop: contact ? getComputedStyle(contact).marginTop : null,
-      });
+        ...getFoldSeamMetrics(),
+      };
     };
-    window.addEventListener('scroll', () => {
-      if (holdDebugFrame) return;
-      holdDebugFrame = requestAnimationFrame(logHoldState);
-    }, { passive: true });
-    logHoldState();
   }
 
   return {
@@ -704,8 +807,7 @@ export function mountJourneyTimeline({
       list.classList.remove('is-resizing', 'is-collapsing', 'has-fade');
       list.style.height = list.style.overflow = list.style.transition = '';
       list.style.removeProperty('--timeline-collapse-fade');
-      releaseJourneySurfaceHold();
-      releaseJourneyPresentation();
+      releaseFoldedPresentation();
       restoreNativeScrollBehavior();
       document.body.classList.remove('is-journey-collapsing', 'is-timeline-folding');
     },

@@ -218,15 +218,6 @@
   contain: layout;
 }
 
-/* Exists only while Recent only folds. Its height exactly replaces the part
-   released by the clipped list, so the Journey grid remains a stable sticky
-   containing block until the compact DOM can be committed atomically. */
-.timeline-fold-reservation {
-  display: block;
-  height: 0;
-  pointer-events: none;
-}
-
 /* During the reverse disclosure the clipping edge is preceded by a soft
    paper dissolve. Cards are eaten from the bottom instead of disappearing at
    one hard overflow boundary while Journey rolls up. The fade length is driven

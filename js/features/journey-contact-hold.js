@@ -21,6 +21,39 @@ const getDocumentTop = node => {
   return top;
 };
 
+/**
+ * How far Contact has settled into its flat, arrived state (0 = full
+ * pre-arrival tilt, 1 = flat), purely from current flow geometry. Exported so
+ * the fold (journey/index.js) can read Contact's already-rendered perspective
+ * at the instant the visitor clicks, instead of snapping it flat.
+ */
+export function getContactApproachSettle({ contact, intro }) {
+  const contactFlowTop = getDocumentTop(contact) - window.scrollY;
+  // Contact is fully flat by the instant its top reaches the lower edge of
+  // the pinned Journey intro — before it can obscure any of that heading.
+  const stickyTop = parseFloat(getComputedStyle(intro).top) || 0;
+  const contactSettleTop = stickyTop + intro.offsetHeight;
+  const approachDistance = Math.max(1, window.innerHeight - contactSettleTop);
+  const linearProgress = Math.max(0, Math.min(1,
+    (window.innerHeight - contactFlowTop) / approachDistance,
+  ));
+  // Ease out quickly so `Get in Touch` becomes readable soon after entry,
+  // with the exact final pixels resolved at the pinned-intro handoff.
+  return 1 - Math.pow(1 - linearProgress, 1.6);
+}
+
+/** Pure: the paper-arrival transform for a given settle fraction (see above). */
+export function getContactSheetTransform(settle) {
+  if (settle >= 1) return 'none';
+  const scaleX = CONTACT_SHEET_START_SCALE_X
+    + (1 - CONTACT_SHEET_START_SCALE_X) * settle;
+  const scaleY = CONTACT_SHEET_START_SCALE_Y
+    + (1 - CONTACT_SHEET_START_SCALE_Y) * settle;
+  const tilt = CONTACT_SHEET_START_TILT_DEG * (1 - settle);
+  const depth = CONTACT_SHEET_START_DEPTH_PX * (1 - settle);
+  return `perspective(1400px) translateZ(${depth.toFixed(2)}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)}) rotateX(${tilt.toFixed(3)}deg)`;
+}
+
 function createDebug({ section, intro, contact }) {
   if (!new URLSearchParams(window.location.search).has(HOLD_DEBUG_QUERY)) return null;
 
@@ -104,29 +137,8 @@ export function initJourneyContactHold() {
   const renderContactSheetPerspective = () => {
     // Measure flow geometry, not getBoundingClientRect(): the latter already
     // includes this transform and would make the progress feed back on itself.
-    const contactFlowTop = getDocumentTop(contact) - window.scrollY;
-    // Contact is fully flat by the instant its top reaches the lower edge of
-    // the pinned Journey intro — before it can obscure any of that heading.
-    const stickyTop = parseFloat(getComputedStyle(intro).top) || 0;
-    const contactSettleTop = stickyTop + intro.offsetHeight;
-    const approachDistance = Math.max(1, window.innerHeight - contactSettleTop);
-    const linearProgress = Math.max(0, Math.min(1,
-      (window.innerHeight - contactFlowTop) / approachDistance,
-    ));
-    // Ease out quickly so `Get in Touch` becomes readable soon after entry,
-    // with the exact final pixels resolved at the pinned-intro handoff.
-    const settle = 1 - Math.pow(1 - linearProgress, 1.6);
-    const scaleX = CONTACT_SHEET_START_SCALE_X
-      + (1 - CONTACT_SHEET_START_SCALE_X) * settle;
-    const scaleY = CONTACT_SHEET_START_SCALE_Y
-      + (1 - CONTACT_SHEET_START_SCALE_Y) * settle;
-    const tilt = CONTACT_SHEET_START_TILT_DEG * (1 - settle);
-    const depth = CONTACT_SHEET_START_DEPTH_PX * (1 - settle);
-    const transform = linearProgress >= 1
-      ? 'none'
-      : `perspective(1400px) translateZ(${depth.toFixed(2)}px) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)}) rotateX(${tilt.toFixed(3)}deg)`;
-
-    document.body.style.setProperty('--contact-sheet-transform', transform);
+    const settle = getContactApproachSettle({ contact, intro });
+    document.body.style.setProperty('--contact-sheet-transform', getContactSheetTransform(settle));
   };
 
   const sync = () => {

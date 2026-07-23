@@ -38,7 +38,7 @@ test('compact fold anchors the existing control near mid-viewport, not a Journey
   globalThis.window = originalWindow;
 });
 
-test('each animated frame reserves released height and limits the control at its compact anchor', () => {
+test('each animated frame releases Journey height and limits the control at its compact anchor', () => {
   const plan = {
     expandedHeight: 2200,
     compactHeight: 680,
@@ -54,22 +54,25 @@ test('each animated frame reserves released height and limits the control at its
   const middle = getCollapseFrame(plan, 0.5);
   const end = getCollapseFrame(plan, 1);
 
-  assert.equal(start.listHeight + start.reservedHeight, plan.expandedHeight);
-  assert.equal(middle.listHeight + middle.reservedHeight, plan.expandedHeight);
-  assert.equal(end.listHeight + end.reservedHeight, plan.expandedHeight);
-  assert.deepEqual(end, { listHeight: 680, reservedHeight: 1520 });
+  assert.equal(start.listHeight + start.releasedHeight, plan.expandedHeight);
+  assert.equal(middle.listHeight + middle.releasedHeight, plan.expandedHeight);
+  assert.equal(end.listHeight + end.releasedHeight, plan.expandedHeight);
+  assert.deepEqual(end, { listHeight: 680, releasedHeight: 1520 });
 
-  // The page does not scroll until the shrinking control reaches the anchor.
-  assert.equal(getFoldScrollLimit({ plan, startScroll, reservedHeight: 167 }), 4000);
-  assert.equal(getFoldScrollLimit({ plan, startScroll, reservedHeight: 168 }), 4000);
-  // From that exact point, the ceiling follows the control to its final y.
-  assert.equal(getFoldScrollLimit({ plan, startScroll, reservedHeight: 700 }), 3468);
-  assert.equal(getFoldScrollLimit({ plan, startScroll, reservedHeight: 1520 }), plan.targetScroll);
+  // Scroll rides the same eased clock as the released height, so the control
+  // is visibly travelling toward its anchor on every frame — no held plateau
+  // followed by a jump.
+  assert.equal(getFoldScrollLimit({ plan, startScroll, eased: 0 }), startScroll);
+  assert.equal(getFoldScrollLimit({ plan, startScroll, eased: 0.5 }), 3324);
+  assert.equal(getFoldScrollLimit({ plan, startScroll, eased: 1 }), plan.targetScroll);
 
-  for (const reservedHeight of [0, 168, 700, 1520]) {
-    const scroll = getFoldScrollLimit({ plan, startScroll, reservedHeight });
-    const controlBottomInViewport = plan.controlDocumentBottom - reservedHeight - scroll;
-    assert.ok(controlBottomInViewport >= plan.desiredControlBottom);
+  // The control never overshoots past its compact anchor at any point along
+  // the shared eased clock — releasedHeight and scroll are locked together.
+  const releasedHeightAt = eased => plan.heightDelta * eased;
+  for (const eased of [0, 0.25, 0.5, 0.75, 1]) {
+    const scroll = getFoldScrollLimit({ plan, startScroll, eased });
+    const controlBottomInViewport = plan.controlDocumentBottom - releasedHeightAt(eased) - scroll;
+    assert.ok(controlBottomInViewport >= plan.desiredControlBottom - 1);
   }
 });
 

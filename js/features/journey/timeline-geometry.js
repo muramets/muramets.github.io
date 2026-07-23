@@ -51,35 +51,33 @@ export function getCollapsePlan({ list, compactLastItem, control, viewportRatio 
 }
 
 /**
- * Derive one fold frame from a single eased value. The reservation is the
- * exact complement of the visible list height, including rounding, so the
- * timeline column and Journey's sticky containing block never change height
- * while a frame is being presented.
+ * Derive one fold frame from a single eased value. `releasedHeight` is the
+ * exact amount of real Journey height removed from the list in this frame.
+ * Contact follows that physical reduction in normal document flow.
  */
 export function getCollapseFrame(plan, eased) {
   const listHeight = Math.round(plan.expandedHeight - plan.heightDelta * eased);
   return {
     listHeight,
-    reservedHeight: plan.expandedHeight - listHeight,
+    releasedHeight: plan.expandedHeight - listHeight,
   };
 }
 
 /**
- * The control is the fold ceiling. Before the shrinking control would cross
- * its final viewport position, preserve the visitor's original scroll. From
- * that exact frame on, move upward with the control so it can never leave the
- * viewport above its compact destination. This is coordinate-based rather
- * than duration-based, which removes the old "fold first, scroll later"
- * behaviour.
+ * Scroll rides the same eased clock as the released list height (see
+ * `getCollapseFrame`), so the two are mathematically locked together: the
+ * control's viewport position moves monotonically from wherever it started
+ * to its compact anchor, in lockstep with the list, on every single frame.
+ *
+ * A prior "hold scroll, then chase the control once it would cross its
+ * anchor" version produced a long visually-static plateau whenever the
+ * control already had little headroom above its anchor at click time (the
+ * common case) — height kept releasing underneath while nothing moved
+ * on screen, then the whole remaining distance was covered at once. Driving
+ * both from the same `eased` value removes that plateau: the seam is always
+ * visibly travelling, and the control still never overshoots past its anchor
+ * (the interpolation lands exactly on it at eased = 1, monotonically).
  */
-export function getFoldScrollLimit({ plan, startScroll, reservedHeight, eased = 1 }) {
-  // A real pointer click can only hit a control that is in the viewport, so
-  // the compact target is normally above startScroll. Keep the inverse case
-  // continuous too: it can occur after a programmatic focus/scroll change.
-  if (plan.targetScroll > startScroll) {
-    return Math.round(startScroll + (plan.targetScroll - startScroll) * eased);
-  }
-  const currentControlBottom = plan.controlDocumentBottom - reservedHeight;
-  const controlCeiling = Math.round(currentControlBottom - plan.desiredControlBottom);
-  return Math.max(0, Math.min(startScroll, controlCeiling));
+export function getFoldScrollLimit({ plan, startScroll, eased = 1 }) {
+  return Math.round(startScroll + (plan.targetScroll - startScroll) * eased);
 }
