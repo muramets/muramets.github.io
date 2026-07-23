@@ -105,8 +105,7 @@ export function mountJourneyTimeline({
   const originalLayoutFoldOpacityPriority = section.style.getPropertyPriority('--journey-fold-layout-opacity');
 
   const glow = mountTimelineGlow({
-    surface: timelineSurface,
-    isWebKitSafari,
+    surface: section,
     isFolding: () => phase === JOURNEY_PHASE.COLLAPSING,
   });
 
@@ -678,6 +677,13 @@ export function mountJourneyTimeline({
     const fromHeight = reducedMotion ? 0 : list.offsetHeight;
     const contextRole = items[previousCount - 1];
     visibleCount = getNextVisibleCount(visibleCount, items.length);
+
+    if (!reducedMotion) {
+      list.classList.add('is-resizing');
+      list.style.height = `${fromHeight}px`;
+      list.style.overflow = 'hidden';
+    }
+
     revealItems(previousCount, visibleCount);
     list.classList.toggle('has-fade', visibleCount < items.length);
     updateRailFade();
@@ -687,7 +693,8 @@ export function mountJourneyTimeline({
     phase = JOURNEY_PHASE.EXPANDED;
     document.documentElement.style.overflowAnchor = 'none';
     setReturnCue(contextRole);
-    await animateListHeight(fromHeight, list.scrollHeight);
+    const targetHeight = list.scrollHeight;
+    await animateListHeight(fromHeight, targetHeight);
     document.documentElement.style.overflowAnchor = '';
   }
 
