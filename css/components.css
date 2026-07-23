@@ -702,7 +702,10 @@ body.page-about:not(.is-admin) .section--journey > .journey-layout {
 }
 
 .form-textarea {
-  min-height: 120px;
+  /* Shrinks first on short viewports — the message field has the most
+     give of any form element, so it gives up its own empty space rather
+     than letting the name/email fields above it run out of room. */
+  min-height: clamp(72px, 14svh, 120px);
   resize: vertical;
   line-height: 1.5;
 }
