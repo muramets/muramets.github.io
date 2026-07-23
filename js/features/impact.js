@@ -8,26 +8,25 @@ export function initScrollInteractionFeedback() {
   let hoveredTile = null;
   let hoverFrame = null;
   const impactChapter = document.querySelector('.scroll-chapter--impact');
+  // The outer chapter is a normal-flow element (270svh tall, never sticky),
+  // so its document-space top is scroll-invariant and safe to cache.
   let impactTop = 0;
   let impactHeight = 0;
-  let impactTileRects = [];
   const refreshImpactBounds = () => {
     if (!impactChapter) return;
     const rect = impactChapter.getBoundingClientRect();
     impactTop = window.scrollY + rect.top;
     impactHeight = impactChapter.offsetHeight;
-    const tiles = Array.from(impactChapter.querySelectorAll('.story-tile'));
-    impactTileRects = tiles.map(tile => {
-      const r = tile.getBoundingClientRect();
-      return {
-        el: tile,
-        top: r.top + window.scrollY,
-        bottom: r.bottom + window.scrollY,
-        left: r.left,
-        right: r.right,
-      };
-    });
   };
+  // The cards themselves live inside the `position: sticky` scene, whose
+  // viewport rect barely changes while pinned — caching it once (as this used
+  // to) goes stale the instant the visitor scrolls at all past mount, and hit
+  // tests start comparing a live pointer against a frozen box. Measure these
+  // live, viewport-relative, every time instead; there are only a handful of
+  // cards, so this is cheap relative to the layout work scrolling already does.
+  const getImpactTiles = () => (impactChapter
+    ? Array.from(impactChapter.querySelectorAll('.story-tile'))
+    : []);
   const isImpactActive = () => {
     if (!impactChapter) return false;
     const viewportBottom = window.scrollY + window.innerHeight;
@@ -65,12 +64,11 @@ export function initScrollInteractionFeedback() {
     if (!isImpactActive()) return;
     let nextTile = null;
     if (lastPointer) {
-      const pageY = lastPointer.y + window.scrollY;
-      const match = impactTileRects.find(t =>
-        lastPointer.x >= t.left && lastPointer.x <= t.right &&
-        pageY >= t.top && pageY <= t.bottom
-      );
-      nextTile = match ? match.el : null;
+      nextTile = getImpactTiles().find(tile => {
+        const r = tile.getBoundingClientRect();
+        return lastPointer.x >= r.left && lastPointer.x <= r.right
+          && lastPointer.y >= r.top && lastPointer.y <= r.bottom;
+      }) ?? null;
     }
     if (hoveredTile && hoveredTile !== nextTile) {
       hoveredTile.classList.remove('has-hover-intent');
