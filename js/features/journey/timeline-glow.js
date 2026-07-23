@@ -281,6 +281,17 @@ export function mountTimelineGlow({ surface, isFolding }) {
   window.addEventListener('resize', onResize, { passive: true });
 
   return {
+    // The canvas spans surface height + underlay depth, measured once at
+    // mount/hover/resize/transitionend. None of those fire when the timeline
+    // list changes height programmatically (mount-time role hiding, or the
+    // fold's rAF-driven height with `transition: none`), so the canvas can be
+    // sized against a taller Journey than currently exists. That's real,
+    // layout-affecting height on an absolutely-positioned element — it
+    // inflates document.scrollHeight beyond what's actually visible. Callers
+    // must force a remeasure right after any such height change.
+    refresh() {
+      resizeCanvas(true);
+    },
     destroy() {
       clearGlow();
       if (glowFrame) cancelAnimationFrame(glowFrame);

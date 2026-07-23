@@ -688,7 +688,10 @@ export function mountJourneyTimeline({
     list.classList.toggle('has-fade', visibleCount < items.length);
     updateRailFade();
     setControlState();
-    if (reducedMotion) return;
+    if (reducedMotion) {
+      glow.refresh();
+      return;
+    }
 
     phase = JOURNEY_PHASE.EXPANDED;
     document.documentElement.style.overflowAnchor = 'none';
@@ -696,6 +699,7 @@ export function mountJourneyTimeline({
     const targetHeight = list.scrollHeight;
     await animateListHeight(fromHeight, targetHeight);
     document.documentElement.style.overflowAnchor = '';
+    glow.refresh();
   }
 
   async function collapseToCompact() {
@@ -710,6 +714,7 @@ export function mountJourneyTimeline({
     if (reducedMotion) {
       visibleCount = COMPACT_ROLE_COUNT;
       renderVisibleItems();
+      glow.refresh();
       // Land on the same composed position, just without the motion.
       if (plan) syncLenisAfterLayout(plan.targetScroll);
       retainFoldedPresentationUntilIntent();
@@ -742,6 +747,7 @@ export function mountJourneyTimeline({
       list.classList.remove('is-resizing', 'is-collapsing');
       list.style.height = list.style.overflow = list.style.transition = '';
       list.style.removeProperty('--timeline-collapse-fade');
+      glow.refresh();
       // Re-assert the coordinate already reached in the final rAF only after
       // Lenis reads the compact document bounds. Passing plan.targetScroll is
       // essential: reading window.scrollY here would adopt a stale position
@@ -794,6 +800,18 @@ export function mountJourneyTimeline({
   control.addEventListener('click', onControlClick);
   window.addEventListener('resize', onResize, { passive: true });
   renderVisibleItems();
+  // mountTimelineGlow() above measured the surface while every role was still
+  // visible (this is the first time roles get hidden down to the compact
+  // count). Its canvas is sized off that now-stale, taller rect and won't
+  // remeasure on its own until a hover/resize/transitionend that may never
+  // come on a plain visit — left alone it keeps reserving real, absolutely-
+  // positioned height below the actual page content for the whole session.
+  // That phantom height inflates document.scrollHeight past where the page
+  // visibly ends, so Lenis's scroll target can run past the real bottom too:
+  // reversing direction there has to unwind that overshoot before the page
+  // visibly moves, which reads as scroll "not responding" after a hard stop.
+  glow.refresh();
+  getLenis()?.resize?.();
 
   // Ad-hoc diagnostics for the Journey→Contact seam, opt-in behind the same
   // query flag. Keep this callable rather than logging every scroll: the
@@ -833,6 +851,8 @@ export function mountJourneyTimeline({
         ? items.length
         : Math.min(visibleCount, items.length);
       renderVisibleItems();
+      glow.refresh();
+      getLenis()?.resize?.();
     },
     destroy() {
       if (destroyed) return;
