@@ -437,6 +437,13 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
   transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/* The gap after Submit only exists to separate Contact from the footer, not
+   to give the form room — so it's the first thing to give up space once the
+   viewport runs short, rather than pushing Submit itself out of view. */
+#contact {
+  padding-bottom: clamp(24px, 6svh, 72px);
+}
+
 .section-container {
   max-width: var(--container);
   margin: 0 auto;

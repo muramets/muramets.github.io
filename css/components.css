@@ -789,6 +789,26 @@ body.page-about:not(.is-admin) .section--journey > .journey-layout {
   .form-field.full-width { grid-column: span 1; }
 }
 
+/* Short viewports (resized/split browser windows, landscape phones): the
+   form still has horizontal room even once it runs out of vertical room, so
+   pull name/email in beside Message instead of leaving them to scroll away
+   under the sticky heading before Submit ever comes into view. */
+@media (max-height: 700px) and (min-width: 640px) {
+  .form-stack {
+    grid-template-columns: minmax(160px, 1fr) minmax(160px, 1fr) minmax(240px, 1.6fr);
+    gap: 16px;
+    align-items: start;
+  }
+  .form-field.full-width { grid-column: span 1; }
+  .form-textarea { min-height: clamp(48px, 26svh, 96px); }
+}
+
+@media (max-width: 639px) and (max-height: 560px) {
+  .form-stack { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-field.full-width { grid-column: span 2; }
+  .form-textarea { min-height: clamp(48px, 22svh, 80px); }
+}
+
 /* ─────────────────────────────────────────────────────────
    EXTERNAL LINK CONFIRMATION MODAL (The Verge Dark Style)
 ───────────────────────────────────────────────────────── */
