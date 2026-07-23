@@ -2,7 +2,7 @@
 import { initAuth, isAdmin, login, logout } from './auth.js';
 import { initStore } from './store.js';
 import { renderPage, applyTexts, applyBlockOrder, applyFooterColOrder, pruneEmptyNav } from './render.js';
-import { initImpactSoftSettle, initScrollInteractionFeedback } from './features/impact.js';
+import { initScrollInteractionFeedback } from './features/impact.js';
 import { mountJourneyTimeline } from './features/journey/index.js';
 import { initJourneyContactHold } from './features/journey-contact-hold.js';
 import { initDeckToggle } from './features/deck-toggle.js';
@@ -59,7 +59,6 @@ if (isAdmin()) {
   initDeckToggle();
   mountJourneyTimeline({ getLenis: () => lenisInstance, isWebKitSafari });
   initJourneyContactHold();
-  initImpactSoftSettle({ getLenis: () => lenisInstance, easing: anchorScrollEasing });
 }
 
 initContactForm();

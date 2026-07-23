@@ -520,7 +520,12 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     inset: 12% 8%;
     z-index: 0;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(60, 255, 208, 0.28), rgba(60, 255, 208, 0) 67%);
+    /* `ellipse` (not `circle`) so the gradient's own shape matches this box's
+       aspect ratio (it's much wider than tall). A circular gradient sized to
+       reach the farthest corner overshoots along the short (vertical) axis,
+       so it hadn't fully faded out by the time it hit the border-radius clip
+       — a visible hard edge along the top/bottom of the glow. */
+    background: radial-gradient(ellipse, rgba(60, 255, 208, 0.28), rgba(60, 255, 208, 0) 67%);
   }
 
   /* A temporary bottom fade lets the cards emerge through the same soft
@@ -618,37 +623,37 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
 
     /* Native hover stays live while the page moves; the class mirrors it when
        a stationary pointer meets a card during a scroll-driven reveal. */
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile:is(:hover, .has-hover-intent, .is-hover-locked) {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile:is(:hover, .has-hover-intent) {
       border-color: transparent;
       scale: 1.018;
       box-shadow: 0 28px 64px rgba(19, 19, 19, 0.22), 0 8px 20px rgba(19, 19, 19, 0.10);
     }
 
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile:is(:hover, .has-hover-intent, .is-hover-locked) .story-headline {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile:is(:hover, .has-hover-intent) .story-headline {
       color: var(--verge-ultraviolet);
     }
 
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent, .is-hover-locked) {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent) {
       --impact-mint-text-surface: var(--absolute-black);
       background: var(--absolute-black);
       color: var(--hazard-white);
       box-shadow: 0 30px 70px rgba(0, 0, 0, 0.34), 0 10px 24px rgba(0, 0, 0, 0.16);
     }
 
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent, .is-hover-locked) .story-headline {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent) .story-headline {
       color: var(--hazard-white);
     }
 
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent, .is-hover-locked) .story-kicker {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent) .story-kicker {
       color: rgba(255, 255, 255, 0.55);
       opacity: 1;
     }
 
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent, .is-hover-locked) .story-deck {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent) .story-deck {
       color: rgba(255, 255, 255, 0.80);
     }
 
-    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent, .is-hover-locked) .story-meta {
+    body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.mint:is(:hover, .has-hover-intent) .story-meta {
       color: rgba(255, 255, 255, 0.75);
       border-top-color: rgba(255, 255, 255, 0.20);
     }
