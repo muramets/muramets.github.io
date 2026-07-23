@@ -506,8 +506,16 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     height: 100svh;
     overflow: clip;
     isolation: isolate;
-    /* The scene uses the viewport for cards, not empty framing. */
-    padding: clamp(24px, 3vw, 40px) var(--gutter) var(--about-content-edge);
+    /* The scene uses the viewport for cards, not empty framing. The box
+       still pins at the true viewport top and keeps its background there —
+       the floating bar is a translucent pill that floats OVER this surface
+       (it doesn't need the surface to start below it). Only the top INSET
+       moves, docking the heading flush with the bar's real rendered bottom
+       edge (--topbar-bottom, set live in section-bar.js). Pinning the box's
+       own `top` there instead (an earlier attempt) left a gap of bare page
+       background showing above it, since the box's background no longer
+       reached the viewport's real top. */
+    padding: var(--topbar-bottom, clamp(24px, 3vw, 40px)) var(--gutter) var(--about-content-edge);
     background-color: var(--surface-slate);
     background-image: var(--paper-grain);
     background-size: var(--paper-grain-size);
@@ -562,7 +570,13 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
   }
 
   body.page-about:not(.is-admin) .scroll-chapter__heading .section-ribbon { margin-bottom: 12px; }
-  body.page-about:not(.is-admin) .scroll-chapter__heading .section-title { margin-bottom: 12px; }
+  /* Unlike the base `.section-title` clamp (width-only), this one also reads
+     `svh` — on a short desktop window the heading needs to give up room
+     before the card grid below it does. */
+  body.page-about:not(.is-admin) .scroll-chapter__heading .section-title {
+    font-size: clamp(36px, 4svh + 2vw, 90px);
+    margin-bottom: 12px;
+  }
   body.page-about:not(.is-admin) .scroll-chapter__heading .section-subtitle {
     margin-bottom: clamp(16px, 2.4svh, 32px);
   }
@@ -572,22 +586,61 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     grid-row: 2;
     inset: auto;
     min-height: 0;
-    /* Keep the air at the scene edges, never inside a card or between rows. */
+    /* Keep the air at the scene edges, never inside a card or between rows.
+       `start` (not `center`) matters on short viewports: if the tile grid's
+       intrinsic height ever exceeds the available track, centering would
+       grow it symmetrically and push the top rows up over the heading. */
     grid-template-rows: repeat(3, max-content);
-    align-content: center;
+    align-content: start;
     margin-top: 0;
-    column-gap: 16px;
-    row-gap: 16px;
+    column-gap: clamp(10px, 1.6svh, 16px);
+    row-gap: clamp(10px, 1.6svh, 16px);
     opacity: 1;
     transform: none;
     will-change: transform;
   }
 
+  /* Fluid against available height (not just width) so the whole scene fits
+     inside the fixed 100svh sticky box on short desktop viewports (e.g. a
+     14" MacBook window, ~820-950px logical height) without the card grid
+     outgrowing its track and riding up over the heading. */
   body.page-about:not(.is-admin) .scroll-chapter__content .story-tile {
     min-height: 0;
+    padding: clamp(14px, 2.4svh, 28px) clamp(18px, 2.4vw, 32px);
+    gap: clamp(8px, 1.4svh, 14px);
     border-color: transparent;
     scale: 1;
     transition: scale 560ms cubic-bezier(0.22, 0.86, 0.24, 1), box-shadow 700ms cubic-bezier(0.22, 0.86, 0.24, 1), background-color 520ms cubic-bezier(0.22, 0.86, 0.24, 1), color 420ms cubic-bezier(0.22, 0.86, 0.24, 1);
+  }
+
+  body.page-about:not(.is-admin) .scroll-chapter__content .story-headline {
+    font-size: clamp(18px, 1.6svh + 0.9vw, 26px);
+  }
+
+  body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.featured .story-headline {
+    font-size: clamp(22px, 2svh + 1.1vw, 32px);
+  }
+
+  body.page-about:not(.is-admin) .scroll-chapter__content .story-kicker {
+    font-size: clamp(9px, 0.9svh + 0.3vw, 10px);
+    letter-spacing: 1.3px;
+  }
+
+  body.page-about:not(.is-admin) .scroll-chapter__content .story-meta {
+    padding-top: clamp(6px, 1svh, 12px);
+    font-size: clamp(9px, 0.9svh + 0.3vw, 10px);
+    line-height: 1.1;
+    letter-spacing: 1.2px;
+    white-space: nowrap;
+  }
+
+  body.page-about:not(.is-admin) .scroll-chapter__content .story-deck {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: clamp(13px, 1.1svh + 0.4vw, 15px);
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   body.page-about:not(.is-admin) .scroll-chapter__content .story-tile.featured.mint {
@@ -750,7 +803,10 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     grid-column: 1;
     grid-row: 1;
     position: sticky;
-    top: clamp(32px, 9svh, 96px);
+    /* Docks flush with the floating section bar's real bottom edge (see
+       Impact's sticky padding above for the same token); clamp fallback
+       covers pre-JS-paint only. */
+    top: var(--topbar-bottom, clamp(32px, 9svh, 96px));
   }
 
   body.page-about:not(.is-admin) .journey-layout__intro .section-title {
@@ -806,6 +862,21 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
        Journey's real lower edge, while the gray paper continuation carries
        the visual transition between both sheets. */
     margin-top: 0;
+  }
+
+  /* Unlike Impact/Journey, Contact's form sits in the same column below its
+     heading rather than beside it — so docking the ribbon+title here means
+     the form scrolls up underneath a heading that stays put, not past it.
+     The opaque paper background stops that moving text from showing through. */
+  body.page-about:not(.is-admin) .contact-heading {
+    position: sticky;
+    top: var(--topbar-bottom, clamp(32px, 9svh, 96px));
+    z-index: 2;
+    padding-bottom: clamp(16px, 2vw, 24px);
+    background-color: var(--canvas);
+    background-image: var(--paper-grain);
+    background-size: var(--paper-grain-size);
+    background-blend-mode: multiply;
   }
 
   /* Footer is the upper, final sheet: Contact may visually pass beneath it,

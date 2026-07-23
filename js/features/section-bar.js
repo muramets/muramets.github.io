@@ -53,6 +53,29 @@ export function initSectionBar({ getLenis, duration, easing }) {
 
   document.body.append(bar);
 
+  // Live chrome-offset token consumed by sticky/docked headings elsewhere
+  // (Impact, Journey) so their resting position tracks the bar's real box
+  // instead of an independently eyeballed value. `getBoundingClientRect()`
+  // is safe to read every tick here — the bar is `position: fixed`, so its
+  // rect is scroll-invariant (see docs/REFACTOR-READINESS.md rule 1).
+  const syncTopbarBottom = () => {
+    document.documentElement.style.setProperty(
+      '--topbar-bottom', `${bar.getBoundingClientRect().bottom}px`,
+    );
+  };
+  new ResizeObserver(syncTopbarBottom).observe(bar);
+  document.fonts?.ready.then(syncTopbarBottom);
+  // The bar mounts pre-visible (opacity 0, translateY(-24px)) and only
+  // animates in later via a transform/opacity transition once scrolled past
+  // the header (see the .is-visible toggle below). ResizeObserver only
+  // fires on box-size changes, never on that transform — so without this,
+  // the very first (pre-visible) rect is what every docked heading reads,
+  // permanently off by the entrance offset. Resync once the arrival
+  // transition actually finishes.
+  bar.addEventListener('transitionend', event => {
+    if (event.propertyName === 'transform') syncTopbarBottom();
+  });
+
   let activeSection = null;
   let indicatorFrame = null;
   let activeNavigation = null;
