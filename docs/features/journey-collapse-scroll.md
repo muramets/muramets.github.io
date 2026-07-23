@@ -1,385 +1,336 @@
-# Journey Timeline Fold — scroll, sticky и глубина страниц
+# Journey Timeline Fold — scroll, sticky и Contact-перспектива
 
 ## Зачем существует эта документация
 
 `Journey` на `about.html` — не отдельная страница и не модальное состояние. Это
-длинная секция между Impact и `#contact`, в которой посетитель раскрывает девять
-ролей, а затем возвращается к трём последним через `Recent only ↑`.
+длинная секция между Impact и `#contact`, в которой посетитель раскрывает роли
+партиями, а затем сворачивает список обратно до трёх последних через
+`Recent only ↑`.
 
-Сворачивание меняет высоту документа примерно на несколько экранов. Поэтому это
-не «анимация высоты списка»: одновременно участвуют обычный поток документа,
-нативный `position: sticky`, Lenis, scroll-driven CSS-анимации и два бумажных
-слоя. Этот документ фиксирует итоговую модель и причины решений, чтобы не
-возвращаться к уже пройденным сбоям.
+Сворачивание («fold») одновременно меняет высоту документа, синхронизирует
+Lenis-скролл и решает, что происходит с 3D-перспективой соседнего листа
+Contact. Раньше здесь была отдельная grid-резервация (`.timeline-fold-
+reservation`) и собственная перспектива Journey во время fold — обе идеи были
+выброшены как источник багов (см. «История сбоев» ниже) в пользу гораздо более
+простой модели: **Contact всегда в обычном document flow, никаких клонов и
+компенсирующих трансформаций положения.** Этот документ описывает итоговую
+модель.
 
 Основной код:
 
 | Зона | Файл |
 | --- | --- |
-| Оркестрация DOM, Lenis и состояния кнопки | `js/features/journey/index.js` |
-| Чистая геометрия | `js/features/journey/timeline-geometry.js` |
-| Лейблы и конечные состояния | `js/features/journey/timeline-state.js` |
-| Подсветка таймлайна | `js/features/journey/timeline-glow.js` |
-| Постоянная глубина страниц и desktop-layout | `css/layout.css` |
+| Оркестрация DOM, Lenis, fold и связь с Contact-перспективой | `js/features/journey/index.js` |
+| Чистая геометрия (план, кадр, лимит скролла) | `js/features/journey/timeline-geometry.js` |
+| Лейблы и конечные состояния кнопки | `js/features/journey/timeline-state.js` |
+| Подсветка таймлайна (Canvas 2D, независимый модуль) | `js/features/journey/timeline-glow.js` |
+| Естественная (нефолдовая) перспектива Contact при скролле | `js/features/journey-contact-hold.js` |
+| Постоянная глубина страниц, fold-CSS-переменные, Impact-сцена | `css/layout.css` |
 | Кнопка, список, маска и индикатор fold | `css/components.css` |
 | Проверки геометрии и контрактов | `test/journey-geometry.test.mjs`, `test/site-contracts.test.mjs` |
 
 ## Внешний контракт
 
-- Начальное состояние: видны три последние роли; остальные раскрываются
-  партиями.
-- `Recent only ↑` возвращает ровно три роли за `1500ms`.
-- Во время каждого показанного кадра sticky-заголовок Journey остаётся видимым.
-- Кнопка — якорь финальной композиции, а не нижняя граница Journey и не начало
-  Contact.
-- На viewport `797px` ориентир финального кадра: `control.bottom ≈ 385px`,
-  `#contact.top ≈ 405px`, sticky intro около `72px` сверху. Конкретный
-  `scrollY` зависит от контента, но расчёт должен приводить к этой композиции.
-- У последней из трёх ролей может быть виден только хвост; её bullets не должны
-  быть обрезаны маской.
+- Начальное состояние: видны `COMPACT_ROLE_COUNT` (3) последние роли; остальные
+  раскрываются партиями по `REVEAL_BATCH_SIZE` (3) через `animateListHeight()`
+  (CSS `transition: height`, `520ms`).
+- `Recent only ↑` схлопывает список обратно до 3 ролей за `FOLD_DURATION_MS`
+  (`1500ms`).
+- Кнопка (`.timeline-expand`) — единственный якорь финальной композиции:
+  `CONTROL_VIEWPORT_RATIO = 0.48` (её нижняя граница садится примерно на
+  середину вьюпорта). Это не граница Journey и не начало Contact.
+- Во время авто-фолда (клик по кнопке) **у Journey нет собственной
+  3D-перспективы**. Она появляется только из естественной scroll-linked
+  анимации (`journey-sheet-settle`/`journey-sheet-exit` в `layout.css`),
+  когда посетитель начинает скроллить руками уже после фолда.
+- Contact всегда в нормальном document flow; во время fold он получает только
+  временный `transform` (perspective-докрутка + `translateY`-компенсация шва),
+  никогда — новую тень, рамку, `z-index` или `position`.
 - Нет клонов секции/заголовка и нет `position: fixed`-замены для sticky.
 - Нет второго, самостоятельного скролла после последнего кадра fold.
 
-## Ментальная модель: четыре независимых процесса
+## Ментальная модель: один общий `eased`-таймер на всё
 
-Главное правило: **сворачивание таймлайна не равно движению бумажной страницы**.
-У fold четыре связанные, но разные ответственности.
-
-```text
-1. Timeline geometry        list height уменьшается и получает нижнюю маску
-2. Journey flow footprint   reservation заменяет освобождённую высоту в grid
-3. Page-surface composition Contact получает обратный translateY
-4. Viewport                 scroll следует за кнопкой-лимитером
-```
-
-| Процесс | Владелец | Что он меняет | Чего не должен менять |
-| --- | --- | --- | --- |
-| Таймлайн | `renderTimelineFoldFrame()` | Только высоту `.timeline-list` и fade | Высоту Journey, Contact, scroll |
-| Нормальный поток Journey | `setJourneySurfaceHold()` | Высоту `.timeline-fold-reservation` | Список и sticky intro |
-| Визуальный слой Contact | `setJourneySurfaceHold()` | Только `--journey-fold-contact-shift` | Его flow-position и глубину |
-| Viewport | `applyControlCeiling()` / `applyScroll()` | Только физический scroll через Lenis | Высоту списка |
-
-Такое разделение не является косметическим. Если список напрямую укорачивает
-высоту grid, содержащий блок sticky сокращается раньше, чем scroll успевает
-компенсировать изменение. Если Contact не получает обратное смещение, во время
-резерва появляется пустой экран. Если страницу Journey «ведёт» за списком,
-исчезают её sticky и бумажная граница.
-
-## DOM- и CSS-контракт
-
-Упрощённая структура неизменна:
-
-```html
-<section class="section section--journey">
-  <div class="section-container journey-layout">
-    <div class="journey-layout__intro">…native sticky…</div>
-    <div class="journey-layout__timeline">
-      <div class="timeline-list">…roles…</div>
-      <button class="timeline-expand">…</button>
-      <!-- временно: .timeline-fold-reservation -->
-    </div>
-  </div>
-</section>
-<section id="contact">…</section>
-```
-
-На desktop `.journey-layout` — двухколоночный grid. Высота правой колонки
-задаёт высоту Journey, а `.journey-layout__intro` использует обычный
-`position: sticky`. Journey имеет отрицательный верхний margin, собственную
-бумажную текстуру, `overflow: clip`, верхнюю тень и `view-timeline`.
-
-### Постоянная архитектура глубины
-
-Глубина — это **не эффект начала fold**. Она задана заранее в `layout.css`:
+Ключевое отличие от старой (grid-reservation) модели: **высота списка и
+scroll едут по одной и той же eased-кривой одного и того же кадра**, поэтому
+ничего не может «обогнать» друг друга.
 
 ```text
-Journey paper layer = 6  — бумажный лист Journey
-Contact paper layer = 7  — следующий лист, принимающий постоянную узкую тень
+eased = foldEase(progress)                      // progress = t / FOLD_DURATION_MS, [0,1]
+
+listHeight  = getCollapseFrame(plan, eased)      // timeline-geometry.js
+scrollY     = getFoldScrollLimit(plan, eased)    // timeline-geometry.js, тот же eased
+contactTilt = lerp(startSettle, 1, eased)        // journey-contact-hold.js, тот же eased
 ```
 
-Journey визуально лежит на Contact: у верхней границы Contact есть постоянный
-псевдоэлемент-shadow-caster. Его мягкая тень ограничена листом Contact,
-заканчивается до формы и затем оставляет светлый `--canvas` с бумажным зерном.
-Это не градиент на всю высоту и не эффект прогресса fold. Верхняя граница
-Contact и его узкая `inset`-тень рисуют тень Journey **внутри нижнего листа**,
-а не большое внешнее облако вокруг Contact. Во время fold Contact меняет только
-`transform: translateY(...)`. Нельзя
-добавлять в `body.is-journey-collapsing #contact` новую `box-shadow`, рамку,
-`z-index` или `position`: это создаёт/меняет визуальный слой в момент клика и
-выглядит как скачок интерфейса. Статические свойства слоя объявляются в
-обычном состоянии Contact; fold-селектор содержит только временный transform
-и отключение pointer events.
+`getFoldScrollLimit` — простая линейная интерполяция `startScroll →
+plan.targetScroll` по `eased`; там **намеренно нет** более старой логики
+«держать scroll, пока кнопка не подойдёт к своей строке, затем догонять».
+Та версия давала длинное визуально статичное плато всякий раз, когда у кнопки
+было мало запаса до своей финальной позиции (частый случай) — высота
+продолжала схлопываться под капотом, а на экране ничего не двигалось, пока не
+происходил рывок в конце. Единый `eased` для высоты и scroll убирает плато:
+шов Journey↔Contact всегда видимо движется, а кнопка математически никогда не
+проезжает свою финальную линию (интерполяция попадает точно в цель при
+`eased = 1`).
+
+Contact следует за нижним краем Journey **автоматически, через нормальный
+flow** — JS не переводит его отдельным `translateY` под высоту списка. Явный
+`translateY` в fold-transform Contact — это только `--journey-fold-contact-
+seam-shift`, статичная поправка на разницу между «визуальным» (со снятым/
+замороженным transform) и «flow» нижним краем Journey, посчитанная один раз в
+момент клика; сам список видимо не требует пересчёта этой поправки по кадрам
+(см. `getFoldSeamMetrics()`).
 
 ## Геометрия: почему якорь — кнопка
 
-Все измерения выполняются в `getCollapsePlan()` **до** первой мутации DOM.
-
-Обозначения:
+Все измерения выполняются в `getCollapsePlan()` (`timeline-geometry.js`)
+**до** первой мутации DOM.
 
 ```text
 Hexpanded  = текущая высота timeline-list
-Hcompact   = высота первых трёх ролей
+Hcompact   = высота первых COMPACT_ROLE_COUNT ролей
 ΔH         = Hexpanded - Hcompact
+
 C          = document-coordinate нижней границы кнопки до fold
 A          = желаемая viewport-coordinate нижней границы кнопки
-             = viewportHeight × 0.48
+             = viewportHeight × CONTROL_VIEWPORT_RATIO (0.48)
+
+targetScroll = clamp(C - ΔH - A, 0, finalMaxScroll)
 ```
 
-После компактного DOM кнопка физически перемещается вверх на `ΔH`, поэтому
-целевой скролл:
+`finalMaxScroll` — максимальный scroll уже укороченного документа
+(`docHeight - ΔH - innerHeight`). Кламп нужен заранее: финальный DOM никогда
+не должен заставлять браузер самому исправлять координату в отдельном кадре.
+
+### Кадр fold (`getCollapseFrame`)
 
 ```text
-targetScroll = C - ΔH - A
-targetScroll = clamp(targetScroll, 0, finalMaxScroll)
+listHeight(e)     = round(Hexpanded - ΔH × e)
+releasedHeight(e) = Hexpanded - listHeight(e)
 ```
 
-`finalMaxScroll` вычисляется как максимальный scroll уже укороченного
-документа. Кламп нужен заранее: финальный DOM никогда не должен заставлять
-браузер самому исправлять координату в отдельном кадре.
+Точное дополнение с учётом округления. Список — единственное, что явно меняет
+высоту; Journey и весь grid вокруг нет отдельного «резервирования» — их
+итоговая высота просто равна высоте списка плюс постоянный padding.
 
-### Кадр fold
+## Contact-перспектива: два порога для одной формулы
 
-Для eased-прогресса `e ∈ [0, 1]`:
+`journey-contact-hold.js` управляет обычной (не-fold) паперной перспективой
+Contact при органическом скролле — тем самым «наклон + масштаб», который
+плавно уходит в `none`, когда Contact считается «полностью прибывшим»
+(`getContactApproachSettle`). Порог «прибытия» **разный** в зависимости от
+того, сворачивался ли когда-нибудь Journey:
 
 ```text
-listHeight(e) = round(Hexpanded - ΔH × e)
-reservedHeight(e) = Hexpanded - listHeight(e)
-
-listHeight + reservedHeight = Hexpanded
+getIntroSettleViewportY(intro)    — до первого фолда: нижний край закреплённого
+                                     intro (Contact «прибыл», как только начал
+                                     бы закрывать заголовок)
+getCompactSettleViewportY()       — после фолда: тот же CONTROL_VIEWPORT_RATIO,
+                                     что и якорь самого фолда
 ```
 
-Это точное дополнение с учётом округления. Поскольку reservation стоит после
-кнопки в той же grid-колонке, физическая высота правой колонки и всей Journey
-остаётся постоянной на протяжении всей анимации. Sticky не получает укороченный
-containing block.
+Выбор порога — по классу `body.is-journey-compact` (см. ниже). Без этой
+синхронизации compact-якорь фолда (~48% вьюпорта) физически не доезжает до
+intro-порога — естественная формула никогда не читала бы «плоско» в компактной
+композиции, и любой последующий скролл заставлял бы перспективу слегка
+доигрывать. Общий источник правды для обоих порогов —
+`CONTROL_VIEWPORT_RATIO`, экспортированная из `timeline-geometry.js`.
 
-### Лимитер viewport
+### Почему у фолда нет собственной перспективы
 
-До тех пор, пока уменьшающаяся кнопка ещё ниже своей финальной линии, viewport
-остаётся там, где был клик. Затем scroll движется вместе с кнопкой:
+Раньше (`applyFoldPerspective`) fold дополнительно писал `rotateX`/`translateZ`
+на Journey в последние ~30% своей длительности — отдельная, явно
+запускавшаяся кликом «псевдо-анимация выхода». Убрана целиком: перспектива
+должна читаться как «страница отвечает на твой скролл», а не как то, что
+вызвал сам клик. `--journey-fold-tilt`/`--journey-fold-depth` (CSS-переменные
+под это) удалены вместе с функцией — они постоянно держались на `0deg`/`0px`
+и были чистым мёртвым кодом.
 
-```text
-currentControlDocumentBottom = C - reservedHeight
-ceiling = currentControlDocumentBottom - A
-frameScroll = min(startScroll, ceiling)
+### Contact на входе в fold: уважать текущую перспективу
+
+`freezeJourneyPresentation()` не сбрасывает Contact в `none` рывком. Он читает
+`getContactApproachSettle()` **в момент клика** (`foldContactStartSettle`) —
+то есть какой наклон/масштаб уже был на экране — и весь rAF-цикл фолда плавно
+доводит эту стартовую долю до `1` (плоско) к последнему кадру:
+
+```js
+contactSettle = foldContactStartSettle + (1 - foldContactStartSettle) * eased;
 ```
 
-Это normal-case: пользователь может нажать кнопку только когда она видна, а
-компактная цель обычно выше текущего scroll. Редкий программный обратный случай
-(`targetScroll > startScroll`) обрабатывается непрерывной интерполяцией на том
-же eased-clock.
+Так клик не «срезает» уже видимую перспективу Contact мгновенно, а органично
+её резолвит.
 
-Именно это исключает «сначала список схлопнулся, потом страница докрутилась».
-Лимит появляется в тот же кадр, в котором кнопка достигла своей линии.
+## Два флага заморозки: `is-journey-folded` vs `is-journey-compact`
+
+Оба ставятся в `retainFoldedPresentationUntilIntent()` сразу после успешного
+commit compact-состояния, но живут по-разному:
+
+| Класс | Снимается | Роль |
+| --- | --- | --- |
+| `is-journey-folded` | При первом `wheel`/`touchstart`/`pointerdown`/`keydown` посетителя | Держит Journey и Contact на замороженных пикселях fold, не давая scroll-linked view-timeline анимациям переиграть entry-геометрию в кадре коммита |
+| `is-journey-compact` | Только при повторном разворачивании ролей (`revealNextRoles`) или `destroy()` | Говорит `journey-contact-hold.js`, каким порогом (`getCompactSettleViewportY`) мерить «прибытие» Contact |
+
+`is-journey-folded` снимается через `wheel`/`touchstart`/`pointerdown`/
+`keydown` c `{ once: true }` — обработчик `releaseFoldedPresentation()`. Он же
+на `CONTACT_RELEASE_TRANSITION_MS` (320ms) добавляет `is-journey-fold-
+releasing`, включая CSS `transition: transform` **только** на этот короткий
+момент — обычные scroll-driven обновления (внутри `journey-contact-hold.js`)
+по-прежнему пишут `transform` без транзишена, чтобы не отставать от курсора.
+После синхронизации порогов (см. выше) обе стороны почти всегда уже совпадают
+на момент снятия маски — эта транзишен-подстраховка нужна только для
+остаточных под-пиксельных случаев (resize между фолдом и снятием, округление),
+а не для рутинного скачка.
 
 ## Строгий порядок операций
 
-### Старт
+### Старт (`collapseToCompact`)
 
-1. Измерить `CollapsePlan` в expanded DOM.
-2. Переключить phase в `COLLAPSING`; кнопка получает `disabled`,
+1. Измерить `CollapsePlan` в expanded DOM (`getCollapsePlan`).
+2. Переключить `phase` в `COLLAPSING`; кнопка получает `disabled`,
    `aria-busy="true"` и текст `compacting life`.
-3. Снять текущие computed `transform` и `opacity` у Journey и layout в
-   CSS-переменные. Так scroll-driven анимации можно остановить без визуального
-   сброса страницы в `transform: none`.
-4. Временно установить inline `html { scroll-behavior: auto !important; }`.
-5. Добавить классы `is-journey-collapsing` и `is-timeline-folding`.
-6. Создать reservation с нулевой высотой и применить исходный scroll-ceiling
-   до первой видимой мутации списка.
+3. `freezeJourneyPresentation()`: снять текущие computed `transform`/`opacity`
+   Journey и layout в CSS-переменные (чтобы отключить их scroll-driven
+   анимации без визуального сброса), и посчитать/заморозить стартовую
+   Contact-перспективу.
+4. `useInstantNativeScroll()`: временный inline `html { scroll-behavior: auto
+   !important; }` (см. раздел про Lenis ниже).
+5. Добавить классы `is-journey-collapsing` и `is-timeline-folding`,
+   `dispatchEvent('timelinefoldstart')`.
 
-### Каждый `requestAnimationFrame`
-
-Порядок намеренно такой и менять его нельзя без повторной проверки sticky:
+### Каждый `requestAnimationFrame` (`animateCollapse`)
 
 ```text
-1. Рассчитать frame и frameScroll.
-2. Записать frameScroll в Lenis.
-3. Установить reservation и обратный translateY Contact.
-4. Установить listHeight и его fade.
-5. Записать debug frame.
+1. progress = clamp((now - start) / FOLD_DURATION_MS, 0, 1); eased = foldEase(progress).
+2. renderTimelineFoldFrame(plan, eased) — реальная высота .timeline-list + fade-маска.
+3. applyControlCeiling(plan, startScroll, eased) — lenis.resize(), затем applyScroll(...).
+4. Contact: переинтерполировать --contact-fold-entry-transform по contactSettle(eased).
+5. Записать debug-кадр (no-op без ?journey-debug).
 ```
 
-Scroll пишется раньше геометрии: иначе браузер может показать один кадр уже
-укороченной страницы со старым scroll, а sticky успевает «отпуститься».
+Scroll пишется сразу после изменения высоты списка, в том же кадре — иначе
+браузер может показать один кадр уже укороченной страницы со старым scroll, и
+sticky успевает «отпуститься».
 
 ### Финальный commit
 
-В одном JavaScript task, до следующего paint:
+В одном JS-task, до следующего paint:
 
-1. Скрыть роли 4–9, оставив список на измеренной compact-высоте.
-2. Удалить reservation и translation Contact.
-3. Снять inline-высоту/маску списка.
-4. Вызвать `lenis.resize()` и **явно** записать `plan.targetScroll`.
-5. Перевести phase в `COMPACT`, вернуть обычный label кнопки.
-6. Убрать классы, snapshot-переменные Journey и временный
-   `scroll-behavior: auto`.
-
-Ключевой нюанс: после `resize()` нельзя брать новый target из `window.scrollY`.
-Нужно передать заранее рассчитанный `plan.targetScroll` — это устраняет
-доскок в bottom страницы, если Lenis или браузер уже успели клампнуть старую
-координату.
+1. Скрыть роли `COMPACT_ROLE_COUNT+1..N`, список остаётся на измеренной
+   compact-высоте.
+2. Снять inline-высоту/overflow/transition/fade-маску списка.
+3. `syncLenisAfterLayout(plan.targetScroll)` — `lenis.resize()`, затем
+   **явно** записать `plan.targetScroll` (не читать `window.scrollY`: это
+   может быть уже clamped браузером/Lenis значение, а не расчётная цель).
+4. `phase → COMPACT`, обычный label кнопки.
+5. `retainFoldedPresentationUntilIntent()` — оба флага заморозки (см. выше).
+6. `finally`: снять `is-journey-collapsing`/`is-timeline-folding`, вернуть
+   `scroll-behavior`, `dispatchEvent('timelinefoldend')`.
 
 ## Lenis 1.1.18: критическая деталь
 
-На desktop Lenis использует `document.documentElement.scrollTop` и владеет
-состоянием `animatedScroll`/`targetScroll`. В fold для scroll используется
-**только**:
+На desktop Lenis владеет состоянием `animatedScroll`/`targetScroll`. Для
+scroll внутри fold используется **только**:
 
 ```js
 lenis.scrollTo(target, { immediate: true, force: true });
 ```
 
-Без Lenis (coarse pointer, reduced motion и т. п.) допускается нативный
+Без Lenis (coarse pointer, `prefers-reduced-motion`) допускается нативный
 `window.scrollTo`.
 
 ### Почему одного `immediate` оказалось недостаточно
 
-У подключённого Lenis 1.1.18 immediate-путь делает по сути следующее:
-
-```text
-animatedScroll = targetScroll = target
-rootElement.scrollTop = target
-reset() // снова читает actualScroll
-```
-
-В проекте глобально задан `html { scroll-behavior: smooth; }`. Когда Lenis в
-этот момент не держит свой `lenis-smooth` класс, браузер начинает плавный
-нативный scroll. Немедленное чтение `actualScroll` возвращает прежнюю
-координату; `reset()` переписывает internal target обратно. Симптом в трейсе:
-
-```text
-expectedScroll: 3680
-actualScroll:   5525
-Lenis target:   5525
-```
-
-Именно поэтому на время fold inline-приоритетом задан `scroll-behavior: auto`.
-Тогда `rootElement.scrollTop` синхронно меняется до вызова `reset()`, и
-`actualScroll === targetScroll` в том же rAF. После cleanup исходное значение
-inline-свойства восстанавливается.
+Immediate-путь Lenis 1.1.18 делает по сути: `animatedScroll = targetScroll =
+target; rootElement.scrollTop = target; reset()` — и `reset()` тут же заново
+читает `scrollTop`. В проекте глобально задан `html { scroll-behavior:
+smooth; }`. Если в этот момент активен нативный smooth-scroll, немедленное
+чтение возвращает ещё старую координату, и `reset()` тихо переписывает
+internal target обратно на неё. Поэтому на время fold стоит inline `scroll-
+behavior: auto !important` — тогда `scrollTop` меняется синхронно до вызова
+`reset()`, и `actualScroll === targetScroll` в том же rAF.
 
 ### Что не делать с Lenis
 
 | Неудачный подход | Почему он ломается |
 | --- | --- |
-| `window.scrollTo()` при работающем Lenis | Следующий Lenis-rAF может восстановить свой старый target. Получаются два владельца scroll. |
-| `lenis.setScroll()` вместе с `lenis.scrollTo()` | Это две физические записи и два возможных native scroll event. Lenis не предоставляет для них транзакцию; такой код маскирует реальную причину рассинхронизации. |
-| Оставить глобальный `scroll-behavior: smooth` | `immediate` в Lenis 1.1.18 прочитает старый `scrollTop` и отменит собственную запись. |
-| `lenis.stop()`/`start()` как способ получить native scroll | Возникает отдельная фаза передачи владения и риск jump при `resize()`/`start()`. В этой фиче это не нужно. |
-| В финале синхронизироваться с `window.scrollY` | Это может быть уже browser-clamped значение, а не рассчитанная цель. |
+| `window.scrollTo()` при работающем Lenis | Следующий Lenis-rAF может восстановить свой старый target — два владельца scroll. |
+| `lenis.setScroll()` вместе с `lenis.scrollTo()` | Две физические записи, два возможных native scroll event, нет транзакции между ними. |
+| Оставить глобальный `scroll-behavior: smooth` во время fold | `immediate` прочитает старый `scrollTop` и отменит собственную запись. |
+| `lenis.stop()`/`start()` ради native scroll | Отдельная фаза передачи владения и риск jump при `resize()`/`start()` — для этой фичи не нужно. |
+| В финале синхронизироваться с `window.scrollY` | Может быть уже browser-clamped значение, а не расчётная цель. |
+| Полагаться только на `ResizeObserver`/`autoResize` Lenis во время активной scroll-write фазы | Он асинхронный и отстаёт на кадр-другой от только что изменённого layout — см. `applyControlCeiling`/`animateListHeight`, которые поэтому дёргают `lenis.resize()` явно и синхронно каждый кадр. |
+
+## Reveal («Show more»): та же Lenis-дисциплина, других средств
+
+`revealNextRoles()`/`animateListHeight()` не пишут scroll вообще — только
+высоту списка, через нативный CSS `transition: height`. Раньше `lenis.resize()`
+вызывался один раз, только после завершения перехода (`transitionend`/
+таймаут-fallback) — то есть все ~520ms, пока браузер сам анимировал `height`
+каждый кадр, Lenis ориентировался на устаревшие (уже неверные) границы
+документа. Если посетитель пытался скроллить в этот момент, Lenis мог упереть
+scroll в старый, ещё не выросший потолок — ощущалось как «сопротивление».
+Исправлено: пока transition идёт, отдельный rAF-цикл (`syncLenisWhileGrowing`)
+на каждом кадре дёргает `lenis.resize()`, как это уже делает fold.
 
 ## История сбоев и их реальные причины
 
-### 1. Sticky intro улетал вверх
+### 1. Sticky intro улетал вверх (архитектура reservation, ныне удалена)
 
-**Симптом.** При почти неизменном scroll `intro.top` доходил до тысяч
-отрицательных пикселей; в интерфейсе исчезали заголовок и описание.
+Была отдельная grid-резервация (`.timeline-fold-reservation`), которая должна
+была точно замещать высоту, отданную списком, чтобы sticky containing block не
+укорачивался раньше времени. Сама идея независимого резервирования оказалась
+источником рассинхронов (см. ниже) и была заменена на текущую модель: Contact
+просто в нормальном flow, без какой-либо резервации вообще.
 
-**Причина.** Уменьшалась реальная высота `.timeline-list`, а значит и
-containing block native sticky. Scroll ещё не компенсировал укорочение, и
-sticky достигал нижней границы Journey.
+### 2. Fold выглядел как два этапа: список сжался, потом страница резко довернулась
 
-**Решение.** `timeline-fold-reservation` точно заменяет высоту, отданную
-списком. Реальная высота Journey во время fold постоянна.
+**Причина.** Прежний лимитер скролла держал `scroll` неподвижным, пока кнопка
+не подойдёт к своей финальной строке, и только потом «догонял» — при
+достаточном запасе кнопки это давало длинное статичное плато, а редкий рывок в
+конце читался как отдельная вторая фаза.
 
-### 2. Fold выглядел как два этапа
+**Решение.** `getFoldScrollLimit` теперь линейно едет по тому же `eased`, что
+и высота списка (см. «Ментальная модель» выше) — движение непрерывно на всём
+протяжении фолда.
 
-**Симптом.** Список сначала полностью уходил из viewport, затем страница резко
-вставала на финальную композицию.
+### 3. Contact «срезался» в плоское состояние в момент клика
 
-**Причина.** В конце animation физический scroll оставался старым; после
-удаления `ΔH` браузер/Lenis пересчитывал короткий документ и зажимал позицию в
-его maximum. В одном трейсе ожидалось `3680`, но compact commit оказался на
-`4207`.
+**Причина.** `freezeJourneyPresentation()` раньше жёстко ставил Contact-
+перспективу в `none` сразу же, не читая, что было на экране до клика.
 
-**Решение.** Рабочий ceiling на каждом кадре плюс явная
-`syncLenisAfterLayout(plan.targetScroll)` в финале.
+**Решение.** Захват стартовой `settle`-доли (`getContactApproachSettle`) в
+момент клика и её плавная интерполяция к `1` по общему `eased` (см. выше).
 
-### 3. Лимитер в коде был, но не действовал
+### 4. После фолда лёгкая перспектива Contact всё равно проскакивала при первом ручном скролле
 
-**Симптом.** `expectedScroll` уменьшался, а `actualScroll` почти не менялся.
-Визуально Contact уходил выше viewport, а снизу появлялась пустота.
+**Причина.** `journey-contact-hold.js` продолжал в фоне писать
+`--contact-sheet-transform` по естественной (intro-based) формуле всё время,
+пока Contact был заморожен фолдом — она пряталась под замороженными
+пикселями, но была ненулевой, потому что compact-якорь фолда не доезжает до
+intro-порога. Переход `is-journey-folded → снят` резко обнажал это значение.
 
-**Причина.** Конфликт Lenis immediate с глобальным native smooth-scroll,
-описанный выше. Reservation и Contact transform честно следовали модели, но
-viewport оставался в старой точке.
+**Решение.** Два порога вместо одного: `getCompactSettleViewportY()` (тот же
+`CONTROL_VIEWPORT_RATIO`, что и у самого фолда) вместо `getIntroSettleViewportY`
+всякий раз, когда `body.is-journey-compact`. Обе стороны считают «прибытие»
+одинаково — рассинхрона не остаётся в принципе, а не просто маскируется
+транзишеном.
 
-**Решение.** Временный `scroll-behavior: auto !important` до cleanup fold.
+### 5. Instrumented rAF-harness зависал
 
-### 4. Contact двигался, но Journey→Contact теряла глубину
-
-**Симптом.** На клике появлялась дополнительная тень/градиент, разделение
-страниц визуально прыгало.
-
-**Причина.** Временный fold-селектор добавлял Contact тень, border и stacking
-context только во время анимации. Это превращало служебную компенсацию в новую
-анимацию глубины.
-
-**Решение.** Слои объявлены постоянно: Journey 6, Contact 7. Fold меняет
-только `translateY`; дополнительной тени не существует.
-
-### 5. Бумажная поверхность Journey резко «плоскела» при клике
-
-**Симптом.** До fold видна ожидаемая перспектива/тень перехода, на первом
-кадре она пропадает.
-
-**Причина.** Для защиты sticky scroll-driven `animation` отключалась вместе с
-`transform: none`. CSS отменял не только динамику, но и текущий вид бумажного
-листа.
-
-**Решение.** До добавления fold-класса сохранить computed transform/opacity в
-CSS-переменных. Во время fold animation остановлена, но на элементе остаются
-снятые пиксели. После финального commit переменные удаляются.
-
-### 6. Contact не двигать вовсе — тоже неверно
-
-**Симптом альтернативного решения.** Reservation удерживает реальную высоту
-Journey, но Contact остаётся далеко внизу. Перед commit появляется большой
-пустой участок, а в финале Contact прыгает вверх на `ΔH`.
-
-**Решение.** Contact получает временный `translateY(-reservedHeight)`. После
-начала ceiling его экранная позиция математически постоянна:
-
-```text
-contactVisualTop = contactDocumentTop - reservedHeight - frameScroll
-```
-
-В фазе, где `frameScroll = C - reservedHeight - A`, слагаемое reservation
-взаимно сокращается. Поэтому Contact не «догоняет» в конце, а стоит в финальной
-композиции вместе с кнопкой.
-
-### 7. Инструментированный rAF-harness зависал
-
-**Симптом.** Консольный harness с `await requestAnimationFrame` переставал
-собирать данные.
-
-**Причина.** Среда DevTools/инструментирования может удерживать rAF иначе, чем
-обычный код страницы.
-
-**Решение.** Для внешнего замера использовать `setInterval`/`setTimeout` или
-события `journeyfolddebug*`, не ожидать rAF из harness.
-
-## Состояние кнопки
-
-Во время `COLLAPSING` сама кнопка остаётся тем же элементом и на том же месте:
-
-- `disabled = true`: повторный клик не запускает конкурирующий fold;
-- `aria-busy="true"`: ассистивным технологиям понятна переходная операция;
-- текст: `compacting life`;
-- маленький spinner показывает, что элемент занят, а не «умер»;
-- эти детали paint-only и не влияют на измеряемую высоту/позицию кнопки.
-
-После compact commit возвращаются обычные label, `disabled = false` и
-`aria-busy="false"`.
+Консольный harness с `await requestAnimationFrame` может вести себя иначе в
+среде DevTools-инструментирования. Для внешнего замера использовать
+`setInterval`/`setTimeout` или события `journeyfolddebug*`, не ждать rAF из
+harness напрямую.
 
 ## Browser paths
 
 | Среда | Поведение |
 | --- | --- |
-| Desktop + Lenis | Полная модель: reservation, ceiling, временный `scroll-behavior: auto`, Lenis immediate. |
-| Desktop без Lenis | Та же геометрия и ceiling, но `applyScroll()` использует нативный scroll. |
-| `prefers-reduced-motion: reduce` | Compact DOM и рассчитанный target применяются синхронно; нет rAF-анимации. |
-| Safari | Та же модель reservation/scroll; существующий Safari fallback для тяжёлых scroll-timeline эффектов сохраняется. |
+| Desktop + Lenis | Полная модель: eased-locked scroll/height, временный `scroll-behavior: auto`, Lenis immediate. |
+| Desktop без Lenis | Та же геометрия, но `applyScroll()` использует нативный `window.scrollTo`. |
+| `prefers-reduced-motion: reduce` | Compact DOM и рассчитанный target применяются синхронно; нет rAF-анимации ни для fold, ни для reveal. |
+| Safari | Отдельная сцена: `html.is-webkit-safari` отключает у Journey собственный scroll-linked `animation`/`transform` целиком (см. `@supports (animation-timeline: view())` блок в `layout.css`) — тяжёлая текстурированная простыня не тянет compositing на этом движке. Fold-геометрия (reservation-less модель, eased-lock) не зависит от этого флага и работает одинаково. |
 | Admin | Visitor-компонент Journey не монтируется; никакой fold-логики нет. |
 
 ## Диагностика
@@ -387,82 +338,74 @@ contactVisualTop = contactDocumentTop - reservedHeight - frameScroll
 Открыть:
 
 ```text
-http://localhost:8000/about?journey-debug=1
+http://localhost:8000/about.html?journey-debug
 ```
 
-В этом режиме `js/main.js` раскрывает `window.__lenis`, а Journey создаёт
-`window.__journeyFoldDebug` и события:
+`js/main.js` в этом режиме раскрывает `window.__lenis`, а Journey создаёт
+`window.__journeyFoldDebug` и события `journeyfolddebugstart` /
+`journeyfolddebugframe` / `journeyfolddebugend`.
 
-```text
-journeyfolddebugstart
-journeyfolddebugframe
-journeyfolddebugend
-```
-
-Структура лога:
-
-| Поле | Для чего нужно |
-| --- | --- |
-| `plan` | `Hexpanded`, `Hcompact`, `ΔH`, `targetScroll`, исходный scroll |
-| `calls` | Каждая команда scroll: writer, target, `before`, `after`, Lenis state |
-| `frames` | Ожидаемый/фактический scroll, control, intro, Contact, list, reservation |
-| `final` | Координаты уже после compact commit и cleanup |
-
-Минимальный console-snippet перед нажатием `Recent only ↑`:
+Минимальный console-snippet, который слушает весь фолд целиком (не зависит от
+того, когда именно нажата кнопка — армируется по `timelinefoldstart`):
 
 ```js
-window.addEventListener('journeyfolddebugend', ({ detail }) => {
-  const folding = detail.frames.filter(({ stage }) => stage === 'folding');
-  const maxScrollError = Math.max(...folding.map(frame =>
-    Math.abs(frame.expectedScroll - frame.actualScroll),
-  ));
-
-  console.table(detail.frames);
-  console.log({
-    plan: detail.plan,
-    final: detail.final,
-    maxScrollError,
-    lastFoldFrame: folding[folding.length - 1],
-  });
-}, { once: true });
+(() => {
+  const section = document.querySelector('.section--journey');
+  const contact = document.getElementById('contact');
+  const rows = [];
+  let raf, stopAt = null;
+  const sample = tStart => {
+    const j = section.getBoundingClientRect();
+    const c = contact.getBoundingClientRect();
+    rows.push({
+      ms: Math.round(performance.now() - tStart),
+      journeyBottom: Math.round(j.bottom),
+      contactTop: Math.round(c.top),
+      visualGap: Math.round(c.top - j.bottom),
+      bodyClass: document.body.className.match(/is-journey-\S+/g)?.join(' ') || '',
+    });
+  };
+  window.addEventListener('timelinefoldstart', () => {
+    rows.length = 0;
+    const tStart = performance.now();
+    const tick = () => {
+      sample(tStart);
+      if (stopAt === null || performance.now() < stopAt) raf = requestAnimationFrame(tick);
+      else console.table(rows);
+    };
+    raf = requestAnimationFrame(tick);
+  }, { once: true });
+  window.addEventListener('timelinefoldend', () => { stopAt = performance.now() + 400; }, { once: true });
+})();
 ```
 
-Признаки здорового прогона:
-
-```text
-maxScrollError ≤ 1px
-last folding actualScroll ≈ expectedScroll ≈ plan.targetScroll
-final.scroll = plan.targetScroll
-introTop остаётся около sticky top
-```
-
-Если `expectedScroll` меняется, а `actualScroll` нет — сначала проверить
-временный `scroll-behavior: auto` и состояние Lenis. Если `actualScroll`
-правильный, но Contact или intro неверны — проверить равенство
-`listHeight + reservedHeight = expandedHeight`, а также наличие только одного
-изменяемого свойства глубины: Contact `translateY`.
+Признаки здорового прогона: `visualGap` держится около `0` на всём протяжении
+(включая хвост после `timelinefoldend`, пока Lenis доводит скролл), без
+длинных плато в `journeyBottom`/`contactTop` (это симптом сбоя №2 выше).
 
 ## Чек-лист при изменении фичи
 
 1. Не менять разметку на fixed/cloned вариант ради sticky.
-2. Сначала обновить `timeline-geometry.js` и его unit-тесты, если меняется
-   якорь, ratio или высота compact-состояния.
+2. Сначала обновить `timeline-geometry.js` и его unit-тесты
+   (`test/journey-geometry.test.mjs`), если меняется якорь, `viewportRatio`
+   или высота compact-состояния — и синхронно поправить
+   `journey-contact-hold.js`, если меняется `CONTROL_VIEWPORT_RATIO`
+   (оба порога Contact-перспективы завязаны на неё).
 3. Не писать scroll через два API и не добавлять второго владельца scroll.
-4. Сохранять порядок: scroll → reservation/Contact → list → debug.
-5. Любой новый визуальный слой должен существовать до клика; во fold допустимы
-   только трансформы/paint-state, не новая тень или z-index.
+4. Любой новый визуальный слой должен существовать до клика; во fold
+   допустимы только трансформы/paint-state, не новая тень или z-index.
+5. Не добавлять фолду собственную 3D-перспективу — это сознательно убрано
+   (см. «История сбоев» №2–3); перспектива только от органического скролла.
 6. Проверить desktop Lenis, no-Lenis, reduced motion и Safari.
 7. Проверить клик с разных глубин списка, а не только из одного сохранённого
    scrollY.
-8. Проверить, что bullets третьей роли не попали в fade mask.
+8. Проверить, что bullets последней компактной роли не попали в fade mask.
 9. Запустить:
 
 ```bash
 npm run check
-git diff --check
 ```
 
-10. Для визуальной регрессии снять два кадра: старт fold и кадр после
-    достижения control-ceiling. На них не должны меняться тень/граница
-    Journey→Contact; меняться должны только timeline, его маска, статус кнопки
-    и нормальный scroll.
+10. Для визуальной регрессии снять два кадра: старт fold и кадр сразу после
+    commit. На них не должны меняться тень/граница Journey→Contact; меняться
+    должны только timeline, его маска, статус кнопки и scroll.
