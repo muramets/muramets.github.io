@@ -12,6 +12,7 @@ import { initSectionBar } from './features/section-bar.js';
 const ANCHOR_SCROLL_DURATION = 1.28;
 const isWebKitSafari = /Safari\//.test(navigator.userAgent)
   && !/Chrome|Chromium|CriOS|Edg|OPR|FxiOS/.test(navigator.userAgent);
+const journeyDebugEnabled = new URLSearchParams(window.location.search).has('journey-debug');
 const anchorScrollEasing = t => 0.5 - Math.cos(Math.PI * t) / 2;
 let lenisInstance = null;
 
@@ -79,6 +80,9 @@ function initLenisScroll(scrollFeedback) {
     syncTouch: false,
     overscroll: false,
   });
+  // Opt-in diagnostics for the Journey fold. It intentionally exists only
+  // behind the query flag so the normal public page exposes no debug handle.
+  if (journeyDebugEnabled) window.__lenis = lenisInstance;
   lenisInstance.on('scroll', () => scrollFeedback.sync());
 }
 

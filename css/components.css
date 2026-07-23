@@ -218,6 +218,15 @@
   contain: layout;
 }
 
+/* Exists only while Recent only folds. Its height exactly replaces the part
+   released by the clipped list, so the Journey grid remains a stable sticky
+   containing block until the compact DOM can be committed atomically. */
+.timeline-fold-reservation {
+  display: block;
+  height: 0;
+  pointer-events: none;
+}
+
 /* During the reverse disclosure the clipping edge is preceded by a soft
    paper dissolve. Cards are eaten from the bottom instead of disappearing at
    one hard overflow boundary while Journey rolls up. The fade length is driven
@@ -626,6 +635,33 @@ body.page-about:not(.is-admin) .section--journey > .journey-layout {
 .timeline-expand:focus-visible {
   outline: 2px solid var(--verge-ultraviolet);
   outline-offset: 3px;
+}
+.timeline-expand:disabled { opacity: 1; }
+
+/* A fold is a committed 1500ms operation. The control remains in place and
+   reports that work rather than becoming an unexplained inert button. The
+   pseudo-elements are paint-only, so this status cannot perturb the timeline
+   geometry that supplies Journey's sticky range. */
+.timeline-expand.is-folding {
+  cursor: progress;
+  text-transform: lowercase;
+  color: var(--verge-ultraviolet);
+  border-color: rgba(82, 0, 255, 0.30);
+  box-shadow: 0 10px 24px rgba(82, 0, 255, 0.13);
+}
+.timeline-expand.is-folding::after {
+  content: '';
+  width: 0.55em;
+  height: 0.55em;
+  margin-left: 0.65em;
+  border: 1.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: timeline-fold-spinner 720ms linear infinite;
+}
+
+@keyframes timeline-fold-spinner {
+  to { transform: rotate(1turn); }
 }
 
 /* Smooth ultraviolet cross-fade state during text morph */

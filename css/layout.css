@@ -362,6 +362,56 @@
   border-bottom: 1px solid var(--hairline);
 }
 
+/* Page depth is static. Journey and Contact are distinct paper sheets before
+   the visitor clicks anything. A fold may translate Contact but never
+   adds/removes a shadow, border, or stacking context mid-gesture. */
+body.page-about:not(.is-admin) {
+  --journey-paper-layer: 6;
+  --contact-paper-layer: 7;
+}
+
+body.page-about:not(.is-admin) #contact {
+  position: relative;
+  z-index: var(--contact-paper-layer);
+  /* Contact is the lower sheet. The broad shade is a real, static shadow
+     cast from its top edge, not a page-height gradient. It is clipped to this
+     sheet and fades out well before the form. */
+  background-color: var(--canvas);
+  background-image: var(--paper-grain);
+  background-size: var(--paper-grain-size);
+  background-blend-mode: multiply;
+  overflow: clip;
+  border-top: 1px solid rgba(19, 19, 19, 0.12);
+  /* Contact receives a narrow, permanent shadow from the Journey sheet above
+     it. Keeping the shade inside the lower paper avoids the large floating
+     cloud produced by an outer shadow on Contact. */
+  box-shadow: inset 0 10px 12px -12px rgba(19, 19, 19, 0.30);
+}
+
+body.page-about:not(.is-admin) #contact::before {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 auto;
+  height: 1px;
+  pointer-events: none;
+  /* 0.096 is a 20% lift over the deliberately subdued 0.08 shadow. */
+  box-shadow: 0 24px 180px -10px rgba(19, 19, 19, 0.096);
+}
+
+body.page-about:not(.is-admin) #contact > .section-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* The hidden normal-flow reservation keeps Journey tall. Contact receives
+   only the matching visual translation; every depth property already exists
+   before the control is clicked. */
+body.page-about.is-journey-collapsing:not(.is-admin) #contact {
+  pointer-events: none;
+  transform: translateY(var(--journey-fold-contact-shift, 0px));
+}
+
 .section-container {
   max-width: var(--container);
   margin: 0 auto;
@@ -631,7 +681,7 @@
 
   body.page-about:not(.is-admin) .section--journey {
     position: relative;
-    z-index: 6;
+    z-index: var(--journey-paper-layer);
     isolation: isolate;
     /* Journey is a real page-layer: it reaches into Impact so the next
        surface can be pulled up from below instead of waiting beneath it. */
@@ -682,15 +732,22 @@
       animation-range: entry 0% entry 68%;
     }
 
-    /* While the timeline folds, its changing height re-evaluates both
-       scroll-driven Journey animations. A transform on either ancestor (the
-       sheet or its layout grid) turns the sticky intro into ordinary flow,
-       which makes the heading disappear as the viewport is compensated.
-       Freeze both layers until the gesture lands. */
+    /* Freeze each scroll-driven Journey layer at the pixels it had when the
+       control was clicked. Cancelling the animations alone would flatten the
+       physical-paper boundary to `transform: none` for one frame. */
     body.page-about.is-journey-collapsing:not(.is-admin) .section--journey,
     body.page-about.is-journey-collapsing:not(.is-admin) .section--journey .journey-layout {
       animation: none;
-      transform: none;
+    }
+
+    body.page-about.is-journey-collapsing:not(.is-admin) .section--journey {
+      transform: var(--journey-fold-sheet-transform, none);
+      opacity: var(--journey-fold-sheet-opacity, 1);
+    }
+
+    body.page-about.is-journey-collapsing:not(.is-admin) .section--journey .journey-layout {
+      transform: var(--journey-fold-layout-transform, none);
+      opacity: var(--journey-fold-layout-opacity, 1);
     }
 
     body.page-about.is-journey-collapsing:not(.is-admin) .journey-layout__intro {

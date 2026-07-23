@@ -83,17 +83,51 @@ test('Journey intro keeps its native sticky context during the component fold', 
   assert.doesNotMatch(timeline + layout, /is-fold-locked|cloneNode\(|position: fixed/);
 });
 
-test('the fold walks height and scroll on one clock with no spacer', async () => {
-  const [timeline, geometry] = await Promise.all([
+test('the fold reserves Journey height and applies the control ceiling before a visible resize', async () => {
+  const [timeline, geometry, components, layout] = await Promise.all([
     read('js/features/journey/index.js'),
     read('js/features/journey/timeline-geometry.js'),
+    read('css/components.css'),
+    read('css/layout.css'),
   ]);
 
-  // Height and scroll share the eased progress; the absolute target is clamped
-  // to the post-collapse maxScroll so no frame overshoots into a clamped state.
-  assert.match(timeline, /const height = Math\.round\(plan\.expandedHeight - plan\.heightDelta \* eased\)/);
-  assert.match(timeline, /const scroll = Math\.round\(startScroll \+ \(plan\.targetScroll - startScroll\) \* eased\)/);
+  assert.match(timeline, /renderTimelineFoldFrame/);
+  assert.match(timeline, /setJourneySurfaceHold\(0\)/);
+  assert.match(timeline, /setJourneySurfaceHold\(frame\.reservedHeight\)/);
+  assert.match(timeline, /getFoldScrollLimit/);
+  assert.match(timeline, /lenis\.scrollTo\(target, \{ immediate: true, force: true \}\)/);
+  assert.doesNotMatch(timeline, /lenis\.setScroll\?\./);
+  assert.match(timeline, /scroll-behavior', 'auto', 'important'/);
+  assert.match(timeline, /freezeJourneyPresentation\(\);\s+useInstantNativeScroll\(\);/);
+  assert.match(timeline, /applyControlCeiling\(plan, startScroll, frame\.reservedHeight, eased\);\s+setJourneySurfaceHold/);
+  assert.match(timeline, /syncLenisAfterLayout\(plan\.targetScroll\);/);
+  assert.match(timeline, /journeyfolddebugstart/);
+  assert.match(timeline, /journeyfolddebugend/);
+  assert.match(geometry, /export function getCollapseFrame/);
+  assert.match(geometry, /export function getFoldScrollLimit/);
   assert.match(geometry, /finalMaxScroll/);
-  // The abandoned spacer scheme must not resurface.
-  assert.doesNotMatch(timeline, /foldSpacer/);
+  assert.match(components, /\.timeline-fold-reservation/);
+  assert.match(layout, /--journey-fold-contact-shift/);
+  assert.match(layout, /--journey-fold-sheet-transform/);
+  assert.match(layout, /--journey-paper-layer: 6/);
+  assert.match(layout, /--contact-paper-layer: 7/);
+  assert.match(layout, /#contact \{\s+position: relative;\s+z-index: var\(--contact-paper-layer\);[\s\S]*background-image: var\(--paper-grain\);[\s\S]*overflow: clip;[\s\S]*border-top: 1px solid rgba\(19, 19, 19, 0\.12\);[\s\S]*box-shadow: inset 0 10px 12px -12px rgba\(19, 19, 19, 0\.30\);/);
+  assert.match(layout, /#contact::before \{[\s\S]*box-shadow: 0 24px 180px -10px rgba\(19, 19, 19, 0\.096\);/);
+  assert.match(components, /\.timeline-expand\.is-folding/);
+  assert.match(timeline, /control\.setAttribute\('aria-busy', String\(isFolding\)\)/);
+  assert.doesNotMatch(timeline + components, /timeline-fold-progress/);
+  assert.doesNotMatch(timeline + layout, /cloneNode\(|position: fixed/);
+  assert.doesNotMatch(timeline, /\.stop\(\)/);
+});
+
+test('Journey diagnostics stay opt-in behind the query flag', async () => {
+  const [main, timeline] = await Promise.all([
+    read('js/main.js'),
+    read('js/features/journey/index.js'),
+  ]);
+
+  assert.match(main, /has\('journey-debug'\)/);
+  assert.match(main, /window\.__lenis = lenisInstance/);
+  assert.match(timeline, /const JOURNEY_DEBUG_QUERY = 'journey-debug'/);
+  assert.match(timeline, /window\.__journeyFoldDebug = state/);
 });
