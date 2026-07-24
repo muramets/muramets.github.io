@@ -79,7 +79,7 @@
             "bullets": [
               "Built HackTube — a full-cycle production studio for BGM YouTube videos: find the idea, edit, render — inside YouTube's native UI, because&nbsp;the best onboarding is the one the user already finished.",
               "Built MonkeyLearn — a coaching platform that turns skill-building into routine actions with clear instructions. When you can see the path, you don't lose the goal.",
-              "&nbsp;Launched and monetized a BGM YouTube channel in the Slow Life Piano niche, plus a series of smaller projects exploring what a modern artist's creative process needs today — from reels to community building."
+              "Launched and monetized a BGM YouTube channel in the Slow Life Piano niche, plus a series of smaller projects exploring what a modern artist's creative process needs today — from reels to community building."
             ]
           }
         },
@@ -205,7 +205,8 @@
             "gradCap": true
           }
         }
-      ]
+      ],
+      "collabs": []
     }
   },
   "texts": {
