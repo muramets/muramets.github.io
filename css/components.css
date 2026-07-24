@@ -71,6 +71,50 @@
   color: var(--hazard-white);
 }
 
+/* Mint outline variant — same shape and hover behaviour as btn-outline-uv
+   (border only, fills solid on hover), jelly-mint accent instead of
+   ultraviolet. Used for the Telegram icon CTA. */
+.btn-outline-mint {
+  display: inline-block;
+  background: transparent;
+  color: var(--jelly-mint);
+  padding: 10px 20px;
+  border: 1px solid var(--jelly-mint);
+  border-radius: var(--radius-pill-promo);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  transition: background 150ms ease, color 150ms ease;
+}
+.btn-outline-mint:hover {
+  background: var(--jelly-mint);
+  color: var(--absolute-black);
+}
+
+/* Icon-only variant: same pill treatment, no label — used for CTAs whose
+   icon already reads as the destination (e.g. Telegram) without a caption. */
+.btn-icon-only {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 0;
+}
+.btn-icon-only svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  display: block;
+  /* The plane glyph is bbox-centred in its viewBox, but its diagonal shape
+     still reads as sitting right-of-centre — nudge for optical balance. */
+  transform: translateX(-1px);
+}
+
 .btn-tag {
   display: inline-block;
   background: var(--jelly-mint);

@@ -777,6 +777,31 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     left: clamp(22px, 2.6vw, 48px);
   }
 
+  /* Safari versions that predate scroll-driven animations (no
+     `animation-timeline: view()`) never get the @supports(view()) block
+     below, so the doors above would sit permanently off-canvas from their
+     base transform, closed content never once shown. IntersectionObserver
+     is universally supported even on those old versions, so mirror the
+     effect as a plain, one-shot open triggered by Impact entering the
+     viewport (see initImpactGateFallback in impact.js) instead of losing
+     the gate motion entirely on any Safari that hasn't auto-updated yet. */
+  @supports not (animation-timeline: view()) {
+    body.page-about:not(.is-admin) .scroll-chapter__shutter--left {
+      transform: translateX(0);
+      transition: transform 900ms cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    }
+    body.page-about:not(.is-admin) .scroll-chapter__shutter--right {
+      transform: translateX(0);
+      transition: transform 900ms cubic-bezier(0.45, 0.05, 0.55, 0.95);
+    }
+    body.page-about.is-impact-gate-open:not(.is-admin) .scroll-chapter__shutter--left {
+      transform: translateX(-106%);
+    }
+    body.page-about.is-impact-gate-open:not(.is-admin) .scroll-chapter__shutter--right {
+      transform: translateX(106%);
+    }
+  }
+
   body.page-about:not(.is-admin) .section--journey {
     position: relative;
     z-index: var(--journey-paper-layer);

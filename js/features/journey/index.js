@@ -628,37 +628,58 @@ export function mountJourneyTimeline({
     return new Promise(resolve => {
       const startedAt = performance.now();
       let loggedStart = false;
+      let settled = false;
+      // Belt-and-braces against a stalled rAF chain (observed on some
+      // WebKit/iOS builds: a single thrown or swallowed frame stops
+      // `requestAnimationFrame(step)` from ever being called again, leaving
+      // this promise — and the disabled "compacting life" control — stuck
+      // forever). setTimeout runs on its own clock, independent of whether
+      // rAF is still firing, so it always gets a last word.
+      const finish = completed => {
+        if (settled) return;
+        settled = true;
+        window.clearTimeout(watchdog);
+        resolve(completed);
+      };
+      const watchdog = window.setTimeout(() => finish(true), FOLD_DURATION_MS + 1000);
       const step = now => {
+        if (settled) return;
         if (destroyed || token !== foldToken) {
-          resolve(false);
+          finish(false);
           return;
         }
-        const progress = Math.max(0, Math.min(1, (now - startedAt) / FOLD_DURATION_MS));
-        const eased = foldEase(progress);
-        const frame = getCollapseFrame(plan, eased);
-        // Shrink Journey first, then synchronise Lenis with the new document
-        // bounds in this same animation frame. Contact follows the resulting
-        // flow position instead of receiving an independent translation.
-        renderTimelineFoldFrame(plan, eased);
-        const expectedScroll = applyControlCeiling(plan, startScroll, eased);
-        if (contact) {
-          const contactSettle = foldContactStartSettle + (1 - foldContactStartSettle) * eased;
-          contact.style.setProperty('--contact-fold-entry-transform', getContactSheetTransform(contactSettle));
-        }
-        recordDebugFrame({
-          plan,
-          frame,
-          expectedScroll,
-          stage: 'collapsing',
-          timing: { progress, eased },
-        });
-        if (debug && !loggedStart) {
+        try {
+          const progress = Math.max(0, Math.min(1, (now - startedAt) / FOLD_DURATION_MS));
+          const eased = foldEase(progress);
+          const frame = getCollapseFrame(plan, eased);
+          // Shrink Journey first, then synchronise Lenis with the new document
+          // bounds in this same animation frame. Contact follows the resulting
+          // flow position instead of receiving an independent translation.
+          renderTimelineFoldFrame(plan, eased);
+          const expectedScroll = applyControlCeiling(plan, startScroll, eased);
+          if (contact) {
+            const contactSettle = foldContactStartSettle + (1 - foldContactStartSettle) * eased;
+            contact.style.setProperty('--contact-fold-entry-transform', getContactSheetTransform(contactSettle));
+          }
+          recordDebugFrame({
+            plan,
+            frame,
+            expectedScroll,
+            stage: 'collapsing',
+            timing: { progress, eased },
+          });
+          if (debug && !loggedStart) {
+            // eslint-disable-next-line no-console
+            console.log('[journey-fold:collapsing]', debug.frames[debug.frames.length - 1]);
+            loggedStart = true;
+          }
+          if (progress < 1) requestAnimationFrame(step);
+          else finish(true);
+        } catch (error) {
           // eslint-disable-next-line no-console
-          console.log('[journey-fold:collapsing]', debug.frames[debug.frames.length - 1]);
-          loggedStart = true;
+          console.error('[journey-fold] collapsing frame failed:', error);
+          finish(true);
         }
-        if (progress < 1) requestAnimationFrame(step);
-        else resolve(true);
       };
       requestAnimationFrame(step);
     });
@@ -738,7 +759,17 @@ export function mountJourneyTimeline({
     let retainFoldPresentation = false;
     try {
       const completed = await animateCollapse(plan);
-      if (!completed) return;
+      if (!completed) {
+        // Aborted mid-fold (unmounted, or superseded by another fold): the
+        // control was disabled and labelled "compacting life" before this
+        // await, so it must be handed back here too, not left stuck forever
+        // — this branch previously returned without ever doing either.
+        phase = JOURNEY_PHASE.COMPACT;
+        list.style.height = list.style.overflow = list.style.transition = '';
+        list.style.removeProperty('--timeline-collapse-fade');
+        setControlState();
+        return;
+      }
       // Commit compact roles while the measured compact height is still
       // present. Journey and Contact already occupy their final flow
       // positions, so this is a content commit rather than a geometry swap.

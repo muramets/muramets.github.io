@@ -126,12 +126,24 @@ export function initMobileNav() {
   cta.href = 'mailto:muramets007@icloud.com';
   cta.textContent = 'Email Me';
 
+  const telegramCta = document.createElement('a');
+  telegramCta.className = 'drawer-cta-icon';
+  telegramCta.href = 'https://t.me/muramets';
+  telegramCta.target = '_blank';
+  telegramCta.rel = 'noopener noreferrer';
+  telegramCta.setAttribute('aria-label', 'Message me on Telegram');
+  telegramCta.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71l-4.14-3.05-2 1.94c-.24.24-.44.44-.82.44z"/></svg>';
+
+  const ctaRow = document.createElement('div');
+  ctaRow.className = 'drawer-cta-row';
+  ctaRow.append(cta, telegramCta);
+
   const mark = document.createElement('div');
   mark.className = 'drawer-watermark';
   mark.setAttribute('aria-hidden', 'true');
   mark.textContent = 'ILIA BLINOV';
 
-  drawer.append(close, links, cta, mark);
+  drawer.append(close, links, ctaRow, mark);
   document.body.append(overlay, drawer);
 
   const open = () => {

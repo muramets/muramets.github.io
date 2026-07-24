@@ -350,11 +350,17 @@ html.is-webkit-safari .section-bar {
   .nav-drawer.is-open .drawer-link { opacity: 1; transform: none; }
   .nav-drawer .drawer-link.is-active { color: var(--jelly-mint); }
 
-  .drawer-cta {
+  .drawer-cta-row {
     position: relative;
     z-index: 1;
     margin-top: auto;
     align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .drawer-cta {
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: 700;
@@ -364,6 +370,24 @@ html.is-webkit-safari .section-bar {
     background: var(--jelly-mint);
     padding: 12px 24px;
     border-radius: var(--radius-pill);
+  }
+
+  /* Icon-only sibling CTA (Telegram) — same pill material as Email Me,
+     circular since it carries no label. */
+  .drawer-cta-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--jelly-mint);
+    border-radius: 50%;
+    flex: none;
+  }
+  .drawer-cta-icon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--absolute-black);
   }
 
   /* Giant vertical wordmark ghosting the panel — the Verge signature */

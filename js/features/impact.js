@@ -1,5 +1,27 @@
 // Impact scene interaction kept separate from the page bootstrap.
 
+/* Safari builds before scroll-driven animations (`animation-timeline: view()`)
+   never run the native door-open keyframes gated behind that @supports block
+   in layout.css — the shutters would sit permanently off-canvas from their
+   base transform, so the gate motion never plays at all on those browsers.
+   IntersectionObserver has been supported for years longer, so trigger the
+   plain, non-scroll-linked fallback transition (see the matching
+   `@supports not (animation-timeline: view())` rules) once Impact scrolls
+   into view, instead of leaving those visitors with no door effect. */
+export function initImpactGateFallback() {
+  if (typeof CSS !== 'undefined' && CSS.supports?.('animation-timeline', 'view()')) return;
+  if (typeof IntersectionObserver === 'undefined') return;
+  const chapter = document.querySelector('.scroll-chapter--impact');
+  if (!chapter) return;
+
+  const observer = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return;
+    document.body.classList.add('is-impact-gate-open');
+    observer.disconnect();
+  }, { threshold: 0.01 });
+  observer.observe(chapter);
+}
+
 /* Cards remain genuinely live during a scroll. When the composition travels
    beneath a resting cursor, hit-testing promotes whichever tile reaches that
    point — exactly like direct hover, with no invented "intent" gate. */

@@ -2,7 +2,7 @@
 import { initAuth, isAdmin, login, logout } from './auth.js';
 import { initStore } from './store.js';
 import { renderPage, applyTexts, applyBlockOrder, applyFooterColOrder, pruneEmptyNav } from './render.js';
-import { initScrollInteractionFeedback } from './features/impact.js';
+import { initScrollInteractionFeedback, initImpactGateFallback } from './features/impact.js';
 import { mountJourneyTimeline } from './features/journey/index.js';
 import { initJourneyContactHold } from './features/journey-contact-hold.js';
 import { initDeckToggle } from './features/deck-toggle.js';
@@ -42,6 +42,20 @@ document.addEventListener('keydown', event => {
   isAdmin() ? logout() : login();
 });
 
+// Each public feature below is independent of the others by design. A device-
+// specific throw in one (a Safari/iPad quirk we haven't hit ourselves, say)
+// must never take out unrelated features like the header layout or mobile
+// nav — those still have to run even if, e.g., the Journey fold set-up fails.
+const safe = (fn, ...args) => {
+  try {
+    return fn(...args);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(`[main] ${fn.name || 'feature init'} failed:`, error);
+    return undefined;
+  }
+};
+
 await initStore();
 initAuth();
 applyTexts();
@@ -49,24 +63,25 @@ applyBlockOrder();
 applyFooterColOrder();
 const pageState = renderPage();
 const scrollFeedback = initScrollInteractionFeedback();
-initLenisScroll(scrollFeedback);
+safe(initImpactGateFallback);
+safe(initLenisScroll, scrollFeedback);
 
 if (isAdmin()) {
   const { initAdmin } = await import('./admin.js');
   initAdmin(pageState);
 } else {
-  pruneEmptyNav();
-  initDeckToggle();
-  mountJourneyTimeline({ getLenis: () => lenisInstance, isWebKitSafari });
-  initJourneyContactHold();
+  safe(pruneEmptyNav);
+  safe(initDeckToggle);
+  safe(mountJourneyTimeline, { getLenis: () => lenisInstance, isWebKitSafari });
+  safe(initJourneyContactHold);
 }
 
-initContactForm();
-initMobileNav();
-initSectionBar({ getLenis: () => lenisInstance, duration: ANCHOR_SCROLL_DURATION, easing: anchorScrollEasing });
-placeStatusForMobile();
-placeKickerInNav();
-initLinkedInModal();
+safe(initContactForm);
+safe(initMobileNav);
+safe(initSectionBar, { getLenis: () => lenisInstance, duration: ANCHOR_SCROLL_DURATION, easing: anchorScrollEasing });
+safe(placeStatusForMobile);
+safe(placeKickerInNav);
+safe(initLinkedInModal);
 if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
 function initLenisScroll(scrollFeedback) {
