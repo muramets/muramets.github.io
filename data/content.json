@@ -225,7 +225,7 @@
       "/index.html": {
         "about.status": "COOCKING...<br>",
         "about.deck.intro": "I help music and the people who make it earn what they deserve.",
-        "about.deck.past": "Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly&nbsp;in the past.",
+        "about.deck.past": "Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly.&nbsp;",
         "about.deck.present": "Now exploring how to be useful in the artist development game — with the skills that got me here, the ones I'm picking up along the way, and the personality that comes with them.",
         "footer.credit.copy": "© 2026 muramets labs",
         "footer.domains.title": "IF YOU ARE CORPORATE",
@@ -236,7 +236,7 @@
         "footer.domains.2": "Business Intelligence",
         "footer.domains.3": "Workflow Automation",
         "footer.domains.4": "Inventory &amp; Sales Operations",
-        "about.kicker": "Product Management · OPERATIONS&nbsp;·&nbsp;Music Tech&nbsp;· Cyprus",
+        "about.kicker": "Product Management · OPERATIONS&nbsp;<span style=\"letter-spacing: 1.8px;\">·</span>&nbsp;Music Tech&nbsp;· Cyprus",
         "about.achievements.subtitle": "The industry speaks in numbers, so here are mine. I'd like to think I'm more than that.",
         "about.experience.subtitle": "The roles I've played so far.",
         "footer.skills.title": "IF YOU ARE FROM THE STREET",
