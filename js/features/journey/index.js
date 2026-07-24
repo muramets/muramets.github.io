@@ -797,6 +797,17 @@ export function mountJourneyTimeline({
       // frame at the final scroll coordinate.
       retainFoldedPresentationUntilIntent();
       retainFoldPresentation = true;
+    } catch (error) {
+      // Anything throwing between the fold finishing and the phase commit
+      // above left `phase` stuck at COLLAPSING with nothing to move it back
+      // — the exact "compacting life" label + disabled control that never
+      // recovers. Land in the same state the `!completed` branch already
+      // uses instead of leaving the control stuck forever.
+      // eslint-disable-next-line no-console
+      console.error('[journey-fold] collapseToCompact failed:', error);
+      phase = JOURNEY_PHASE.COMPACT;
+      list.style.height = list.style.overflow = list.style.transition = '';
+      list.style.removeProperty('--timeline-collapse-fade');
     } finally {
       foldToken++;
       list.classList.remove('is-resizing', 'is-collapsing');
@@ -804,6 +815,9 @@ export function mountJourneyTimeline({
       if (!retainFoldPresentation) releaseJourneyPresentation();
       restoreNativeScrollBehavior();
       document.documentElement.style.overflowAnchor = originalOverflowAnchor;
+      // Belt-and-braces resync, independent of which branch above ran: the
+      // control must never be left reflecting a stale `phase`.
+      setControlState();
       window.dispatchEvent(new Event('timelinefoldend'));
       if (debug) {
         debug.endedAt = performance.now();

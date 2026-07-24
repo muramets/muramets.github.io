@@ -84,8 +84,36 @@ export function initVibePlayer() {
   alignGateLabelToButton(gateBtn);
 
   const audio = new Audio(TRACK_SRC);
-  audio.preload = 'none';
-  audio.volume = 0;
+  // iOS Safari ignores HTMLMediaElement.volume entirely (it's tied to the
+  // hardware buttons there) — every fade below runs through a Web Audio
+  // GainNode instead, which iOS does respect. The node can only be created
+  // once, and only inside a user gesture, so it's built lazily on first tap.
+  audio.preload = 'metadata';
+
+  let audioCtx = null;
+  let gainNode = null;
+  const ensureAudioGraph = () => {
+    if (gainNode) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaElementSource(audio);
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0;
+    source.connect(gainNode).connect(audioCtx.destination);
+  };
+
+  // Loading only starts on tap otherwise (preload="none" territory), which
+  // on a slow link is exactly the "button feels laggy" delay reported on
+  // iPad — the tap itself is instant, but audio.play() sits waiting on the
+  // network for a beat first. Buffering ahead of time once the gate is
+  // actually in view removes that wait without fetching 6MB for visitors
+  // who never scroll this far.
+  const preloadObserver = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return;
+    audio.preload = 'auto';
+    audio.load();
+    preloadObserver.disconnect();
+  }, { rootMargin: '200% 0px' });
+  preloadObserver.observe(gateBtn);
 
   let fadeToken = 0;
   const fadeVolume = (from, to, duration, ease) => {
@@ -95,7 +123,7 @@ export function initVibePlayer() {
       const step = now => {
         if (token !== fadeToken) return resolve();
         const x = Math.min((now - start) / duration, 1);
-        audio.volume = from + (to - from) * ease(x);
+        if (gainNode) gainNode.gain.value = from + (to - from) * ease(x);
         if (x < 1) requestAnimationFrame(step);
         else resolve();
       };
@@ -108,7 +136,7 @@ export function initVibePlayer() {
     if (fadingOut || !Number.isFinite(audio.duration)) return;
     if (audio.currentTime < audio.duration - VOLUME_FADE_MARGIN_S) return;
     fadingOut = true;
-    fadeVolume(audio.volume, 0, VOLUME_FADE_MS, fadeOutEase);
+    fadeVolume(gainNode ? gainNode.gain.value : TARGET_VOLUME, 0, VOLUME_FADE_MS, fadeOutEase);
   });
 
   const player = document.createElement('button');
@@ -144,21 +172,19 @@ export function initVibePlayer() {
     const prefix = restingTransform === 'none' ? '' : `${restingTransform} `;
     const at = (y, scale) => `${prefix}translateY(${y}px) scale(${scale})`;
 
-    try {
+    // ensureAudioGraph() and the resume()/play() calls below must all be
+    // reachable synchronously from this tap for iOS to treat the audio as
+    // gesture-initiated — but the promise itself is awaited later, after
+    // the grow animation, so the tap's visual response never waits on
+    // network/decode latency first.
+    ensureAudioGraph();
+    const audioReady = (async () => {
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
       audio.currentTime = 0;
-      audio.volume = INTRO_VOLUME;
-      const playPromise = audio.play();
+      gainNode.gain.value = INTRO_VOLUME;
+      await audio.play();
       fadeVolume(INTRO_VOLUME, TARGET_VOLUME, VOLUME_FADE_MS, fadeInEase);
-      await playPromise;
-    } catch {
-      // Autoplay/decoding refused — leave the gate button as-is, no corner
-      // control to show for a track that never actually started.
-      gateBtn.disabled = false;
-      gateBtn.style.animation = '';
-      gateBtn.style.transform = '';
-      gateBtn.classList.remove('is-launching');
-      return;
-    }
+    })();
 
     // Phase 1: grow toward the viewer in place.
     await gateBtn.animate(
@@ -179,6 +205,19 @@ export function initVibePlayer() {
       ],
       { duration: 280, easing: RECEDE_EASE, fill: 'forwards' },
     ).finished;
+
+    try {
+      await audioReady;
+    } catch {
+      // Autoplay/decoding refused after all — restore the gate button
+      // instead of handing off to a corner control for a track that never
+      // actually started.
+      gateBtn.style.transform = '';
+      gateBtn.style.animation = '';
+      gateBtn.classList.remove('is-launching', 'is-playing');
+      gateBtn.disabled = false;
+      return;
+    }
 
     gateBtn.style.display = 'none';
     if (ring) ring.style.animation = 'none';

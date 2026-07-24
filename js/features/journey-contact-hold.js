@@ -131,6 +131,14 @@ function createDebug({ section, intro, contact }) {
 }
 
 export function initJourneyContactHold() {
+  // Same tradeoff as Journey's own scroll-driven fold (see the
+  // html.is-webkit-safari overrides in css/layout.css): WebKit recomposites
+  // this whole sheet on every scroll frame for a 3D transform that's purely
+  // decorative, and on iPad that reliably drops to a low, stuttering frame
+  // rate. Skip the computation entirely there — Contact just arrives flat,
+  // the same way Journey's own arrival motion is turned off for this engine.
+  if (document.documentElement.classList.contains('is-webkit-safari')) return () => {};
+
   const section = document.querySelector('.section--journey');
   const layout = section?.querySelector('.journey-layout');
   const intro = layout?.querySelector('.journey-layout__intro');
