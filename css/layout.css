@@ -310,6 +310,12 @@
   opacity: 1;
 }
 
+/* The badge is a single-line pill, so a line break carries no meaning here —
+   but admin-set status text often ends with a stray <br>, which becomes an
+   empty flex item and pads the pill 8px to the right of its own text,
+   leaving the label visibly off-centre over the avatar. */
+.masthead-avatar-wrap .masthead-date br { display: none; }
+
 .masthead-avatar-wrap .masthead-date::before {
   content: '';
   display: inline-block;
@@ -836,6 +842,17 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     pointer-events: auto;
     opacity: 0.82;
     transition: opacity 220ms ease;
+    /* The button's box spans 38% of the section, so iOS painting its default
+       tap highlight across the whole thing reads as a stray panel lighting
+       up rather than a control being pressed. The icon and label carry the
+       press feedback instead (see the :active rule below). */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Touch has no hover to fall back on, so :active supplies the press
+     feedback the hover rules give a pointer — and it works on both. */
+  body.page-about:not(.is-admin) .vibe-gate-btn:active .vibe-gate-btn__dot {
+    scale: 0.92;
   }
 
   body.page-about:not(.is-admin) .vibe-gate-btn__inner {

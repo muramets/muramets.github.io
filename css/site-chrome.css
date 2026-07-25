@@ -406,31 +406,19 @@ html.is-webkit-safari .section-bar {
     pointer-events: none;
   }
 
-  /* Status badge sits above the avatar here too, but anchored to the
-     avatar's right edge instead of centred on it: the label is far wider
-     than a 104px avatar, so centring would hang it off the screen. Growing
-     leftward it fills the empty space beside the wordmark instead. Wrapping
-     stays on word boundaries and the badge is capped to the gutter-inset
-     viewport, so even a long admin-set status stays whole and on-screen. */
+  /* Keeps the desktop anchoring — centred on the avatar, straddling its top
+     edge — and only adds the guards a 104px avatar needs. The badge is
+     absolutely positioned inside that 104px wrap, so shrink-to-fit would
+     fold it to the wrap's width; max-content sizes it to its text instead.
+     The cap is what stops it reaching past the screen: centred on the
+     avatar it can only run as far right as the avatar's own UV ring, which
+     puts its half-width ceiling at 72px. Longer admin-set text folds on
+     word boundaries inside that cap rather than pushing the page sideways. */
   .masthead-avatar-wrap .masthead-date {
-    top: auto;
-    bottom: calc(100% + 8px);
-    left: auto;
-    right: 0;
-    transform: none;
-    /* The badge is absolutely positioned inside a 104px wrap, so shrink-to-fit
-       would wrap it to that width. max-content lets it size to its text and
-       only fold — on word boundaries — once it hits the viewport cap. */
     width: max-content;
-    /* Both 20px gutters, plus the 6px the wrap is inset by to leave room for
-       the avatar's UV ring — the badge's right edge rides that same inset. */
-    max-width: calc(100vw - 46px);
+    max-width: 144px;
     white-space: normal;
-    text-align: right;
-  }
-
-  .masthead-avatar-wrap .masthead-date:hover {
-    transform: translateY(-2px);
+    text-align: center;
   }
 }
 
