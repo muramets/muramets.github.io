@@ -61,28 +61,21 @@ export function placeKickerInNav() {
   }
 }
 
-/* Mobile: the status label (COOKING… / Available for Collab) moves from
-   the meta row into the hero row — between the wordmark and the avatar.
-   Desktop keeps the original meta-row position. The node MOVES (never
-   duplicates), so admin editing and applyTexts keep a single source. */
+/* The status label (COOKING… / Available for Collab) is badge-anchored above
+   the avatar at every width — CSS alone handles how it sits there. It used to
+   be re-parented into the hero row *between* the wordmark and the avatar on
+   mobile, which made it a flex sibling competing for the row's width: the
+   avatar got shoved off-screen, and constraining it instead broke the label
+   mid-word. Out of flow above the avatar, it can do neither. The node MOVES
+   (never duplicates), so admin editing and applyTexts keep a single source. */
 export function placeStatusForMobile() {
   const status = document.querySelector('.masthead-date');
   const metaRow = document.querySelector('.masthead-meta-row');
   const heroRow = document.querySelector('.masthead-hero-row');
   if (!status || !metaRow || !heroRow) return;
   const avatar = heroRow.querySelector('.masthead-avatar-wrap');
-  const mq = matchMedia('(max-width: 650px)');
-  const apply = () => {
-    if (mq.matches) {
-      heroRow.insertBefore(status, avatar ?? null);
-    } else if (avatar) {
-      avatar.prepend(status);
-    } else {
-      metaRow.append(status);
-    }
-  };
-  mq.addEventListener('change', apply);
-  apply();
+  if (avatar) avatar.prepend(status);
+  else metaRow.append(status);
 }
 
 /* ── Mobile: burger + slide-in drawer (all pages) ─────────────

@@ -850,8 +850,14 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     will-change: transform, opacity;
   }
 
-  body.page-about:not(.is-admin) .vibe-gate-btn:hover {
-    opacity: 1;
+  /* Every hover state on the gate is gated behind a real pointer. On iOS
+     Safari a tap latches :hover and only releases it on the next tap
+     elsewhere, so a touch visitor saw the button light up and stay lit —
+     reading as "pressed but nothing happened" while the launch ran. */
+  @media (hover: hover) {
+    body.page-about:not(.is-admin) .vibe-gate-btn:hover {
+      opacity: 1;
+    }
   }
 
   body.page-about:not(.is-admin) .vibe-gate-btn__icon {
@@ -897,9 +903,11 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
 
   /* Resting state reads as the solid, "on" capsule; hover eases back to the
      ghost tint — a quieter state the pointer settling there reveals. */
-  body.page-about:not(.is-admin) .vibe-gate-btn:hover .vibe-gate-btn__dot {
-    scale: 1.08;
-    background: rgba(82, 0, 255, 0.16);
+  @media (hover: hover) {
+    body.page-about:not(.is-admin) .vibe-gate-btn:hover .vibe-gate-btn__dot {
+      scale: 1.08;
+      background: rgba(82, 0, 255, 0.16);
+    }
   }
 
   /* Play triangle, drawn with borders instead of an icon font/svg — one
@@ -920,8 +928,10 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
 
   /* Inverts alongside the dot's fade to ghost above, so the glyph stays
      legible against the translucent tint instead of vanishing into it. */
-  body.page-about:not(.is-admin) .vibe-gate-btn:hover .vibe-gate-btn__glyph {
-    border-color: transparent transparent transparent var(--verge-ultraviolet);
+  @media (hover: hover) {
+    body.page-about:not(.is-admin) .vibe-gate-btn:hover .vibe-gate-btn__glyph {
+      border-color: transparent transparent transparent var(--verge-ultraviolet);
+    }
   }
 
   body.page-about:not(.is-admin) .vibe-gate-btn.is-playing .vibe-gate-btn__glyph {
@@ -950,9 +960,11 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
     left: 5px;
   }
 
-  body.page-about:not(.is-admin) .vibe-gate-btn.is-playing:hover .vibe-gate-btn__glyph::before,
-  body.page-about:not(.is-admin) .vibe-gate-btn.is-playing:hover .vibe-gate-btn__glyph::after {
-    background: var(--verge-ultraviolet);
+  @media (hover: hover) {
+    body.page-about:not(.is-admin) .vibe-gate-btn.is-playing:hover .vibe-gate-btn__glyph::before,
+    body.page-about:not(.is-admin) .vibe-gate-btn.is-playing:hover .vibe-gate-btn__glyph::after {
+      background: var(--verge-ultraviolet);
+    }
   }
 
   body.page-about:not(.is-admin) .vibe-gate-btn__text {
@@ -966,8 +978,10 @@ body.page-about.is-journey-fold-releasing:not(.is-admin) #contact {
 
   /* Readable-on-mint light state from the shared token set, matching how
      the mint header treats its own active nav text elsewhere on the site. */
-  body.page-about:not(.is-admin) .vibe-gate-btn:hover .vibe-gate-btn__text {
-    color: var(--hazard-white);
+  @media (hover: hover) {
+    body.page-about:not(.is-admin) .vibe-gate-btn:hover .vibe-gate-btn__text {
+      color: var(--hazard-white);
+    }
   }
 
   @keyframes vibe-ring-pulse {

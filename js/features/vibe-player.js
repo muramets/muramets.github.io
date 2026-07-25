@@ -10,6 +10,9 @@ const TARGET_VOLUME = 0.15;
 const INTRO_VOLUME = TARGET_VOLUME * 0.20;
 const VOLUME_FADE_MS = 10000;
 const VOLUME_FADE_MARGIN_S = 10;
+// Ceiling on how long the launch waits for playback to actually begin before
+// treating it as failed and handing the gate button back to the visitor.
+const PLAYBACK_TIMEOUT_MS = 4000;
 // Same arrive grammar the Impact cards themselves use (impact-card-surface-
 // arrive/impact-card-content-arrive in css/layout.css) — a plain decelerate,
 // no elastic overshoot, so the button reads as one more card settling in
@@ -128,6 +131,27 @@ export function initVibePlayer() {
     });
   };
 
+  // MUST stay synchronous from the click handler down to `audio.play()`.
+  // iOS/iPadOS Safari only honours play() while the user gesture is still
+  // executing synchronously; the previous `await audioCtx.resume()` sitting
+  // in front of it forfeited that activation, so play() rejected (or never
+  // settled) and the gate button stalled mid-launch. Creating and resuming
+  // an AudioContext inside the gesture is allowed, and resuming it *after*
+  // play() keeps the activation intact — the element is already routed
+  // through the graph, so it becomes audible the moment the context runs.
+  const startPlayback = () => {
+    ensureAudioGraph();
+    audio.currentTime = 0;
+    if (gainNode) gainNode.gain.setValueAtTime(INTRO_VOLUME, audioCtx.currentTime);
+
+    const playing = audio.play() ?? Promise.resolve();
+    const resumed = audioCtx.state === 'suspended' ? audioCtx.resume() : Promise.resolve();
+
+    return Promise.all([playing, resumed]).then(() => {
+      fadeVolume(INTRO_VOLUME, TARGET_VOLUME, VOLUME_FADE_MS, fadeInEase);
+    });
+  };
+
   let fadingOut = false;
   audio.addEventListener('timeupdate', () => {
     if (fadingOut || !Number.isFinite(audio.duration)) return;
@@ -158,16 +182,7 @@ export function initVibePlayer() {
 
     gateBtn.classList.add('is-launching');
 
-    ensureAudioGraph();
-    const audioReady = (async () => {
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
-      audio.currentTime = 0;
-      if (gainNode) {
-        gainNode.gain.setValueAtTime(INTRO_VOLUME, audioCtx.currentTime);
-      }
-      await audio.play();
-      fadeVolume(INTRO_VOLUME, TARGET_VOLUME, VOLUME_FADE_MS, fadeInEase);
-    })();
+    const audioReady = startPlayback();
 
     const atInner = (y, scale) => `translateY(${y}px) scale(${scale})`;
 
@@ -190,7 +205,16 @@ export function initVibePlayer() {
     ).finished;
 
     try {
-      await audioReady;
+      // A play() promise that never settles would strand the button here —
+      // invisible from phase 2's `fill: 'forwards'` and unclickable from
+      // `.is-launching { pointer-events: none }`. Bound the wait so a stalled
+      // start unwinds through the same recovery path as an outright rejection.
+      await Promise.race([
+        audioReady,
+        new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('playback did not start in time')), PLAYBACK_TIMEOUT_MS);
+        }),
+      ]);
     } catch (err) {
       // eslint-disable-next-line no-console
       console.warn('[vibe-player] Playback failed:', err);
@@ -214,7 +238,16 @@ export function initVibePlayer() {
     );
   };
 
-  gateBtn.addEventListener('click', () => { void launch(); }, { once: true });
+  // Re-armable rather than `{ once: true }`: the catch above deliberately
+  // restores the button after a failed start, but a one-shot listener had
+  // already been discarded by then, so that retry was unreachable and the
+  // gate just sat there dead to every further tap.
+  let launching = false;
+  gateBtn.addEventListener('click', () => {
+    if (launching) return;
+    launching = true;
+    void launch().finally(() => { launching = false; });
+  });
 
   player.addEventListener('click', () => {
     if (audio.paused) {
