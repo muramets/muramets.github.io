@@ -113,8 +113,11 @@ body {
   display: inline-block;
 }
 
-/* Web status label (over the avatar) stays on screen only */
-.masthead-date { display: none; }
+/* Web status label ("Cooking…", over the avatar) stays on screen only.
+   It is docked into .masthead-avatar-wrap at runtime, and that rule
+   (layout.css) outranks a bare .masthead-date — hence !important. */
+.masthead-date,
+.masthead-avatar-wrap .masthead-date { display: none !important; }
 
 .masthead-deck {
   font-size: 10.5pt;
@@ -160,6 +163,7 @@ body {
   color: #131313;
   border-bottom: 2.5pt solid #3cffd0;
   padding-bottom: 1pt;
+  break-after: avoid;      /* a heading never ends a page alone */
 }
 
 /* ── Achievements: identical hairline rows, no accent fills ── */
@@ -214,7 +218,11 @@ body {
 }
 
 /* ── Timeline: UV dashed rail, compact two-column rows ── */
+/* Block, not the screen flex column: Chrome never splits a flex item across
+   a page break — it pushes the whole role to the next sheet and leaves the
+   remainder of the current one blank. Block boxes fragment normally. */
 .timeline-list {
+  display: block;
   border-left: 0.75pt dashed #3d00bf;
   padding-left: 5mm;
   margin-left: 1mm;
@@ -227,17 +235,21 @@ body {
 .timeline-list::before { display: none; }
 
 /* Roles may split across pages — the page fills fully and only the
-   overflow continues on the next one. Individual bullets stay whole. */
+   overflow continues on the next one. Individual bullets stay whole.
+   That is only possible in block layout: no engine fragments a grid or
+   flex item, so a role that didn't fit the remaining space was moved to
+   the next sheet whole (Safari does it to every role, Chrome to the ones
+   its grid fragmentation can't handle) and left the page blank below the
+   Journey heading. The two-column look is rebuilt with a float — same
+   32mm rail column, but a box the printer can actually cut through. */
 .timeline-item {
-  grid-template-columns: 32mm 1fr;
-  gap: 5mm;
   padding: 5pt 0;
   border-top: 0.5pt solid #d4d4d4;
 }
 
 /* PDF always prints the full timeline — cards are hidden via inline
    display on screen, so !important is required to win here */
-.timeline-list .timeline-item { display: grid !important; }
+.timeline-list .timeline-item { display: block !important; clear: both; }
 .timeline-list.has-fade::after { display: none; }
 .timeline-expand { display: none; }
 
@@ -245,23 +257,32 @@ body {
 .timeline-body .story-deck { break-after: avoid; }
 .timeline-list .timeline-item:first-child { border-top: none; padding-top: 0; }
 
-.timeline-meta { padding-top: 0; gap: 1pt; }
-.timeline-meta h4 { font-size: 10.5pt; color: #131313; }
+.timeline-meta {
+  display: block;
+  float: left;
+  width: 32mm;
+  padding-top: 0;
+}
+.timeline-meta > * + * { margin-top: 1pt; }
+.timeline-meta h4 { display: block; font-size: 10.5pt; color: #131313; }
 .timeline-company { font-size: 8pt; line-height: 1.3; }
 .timeline-time { font-size: 7pt; margin-top: 1pt; letter-spacing: 0.8px; }
 .timeline-duration { font-size: 6.5pt; letter-spacing: 0.8px; }
 
 .timeline-body {
+  display: block;
+  margin-left: 37mm;
   background: #fff;
   border: none;
   border-radius: 0;
   padding: 0;
-  gap: 3pt;
   color: #131313;
 }
+.timeline-body > * + * { margin-top: 3pt; }
 
 .timeline-body .story-deck { color: #333; }
-.timeline-bullets { gap: 1pt; }
+.timeline-bullets { display: block; }
+.timeline-bullets li + li { margin-top: 1pt; }
 .timeline-bullets li { font-size: 8.5pt; line-height: 1.35; color: #333; padding-left: 9pt; }
 .timeline-bullets li::before { color: #5200ff; font-size: 8pt; }
 .timeline-outro { font-size: 8.5pt; line-height: 1.35; color: #333; break-inside: avoid; }
@@ -270,3 +291,100 @@ body {
 
 /* Mobile nav chrome never prints */
 .nav-burger, .nav-drawer, .nav-overlay, .section-bar { display: none; }
+
+/* ── About's scroll theatre flattens back into a document ──
+   The desktop Impact chapter is a 270svh scroll stage: a sticky 100svh box
+   with the IMPACT/01 gates over it, and Journey pulled up by -48svh on a
+   scroll-driven timeline. Print has no scrolling and no viewport, so the
+   printer paginated the stage itself — page one was the closed gates, the
+   remaining stage height printed as blank paper, and the cards (opacity
+   driven from a timeline that never advances) never showed up.
+   These rules undo the staging, matching the reduced-motion fallback in
+   site-chrome.css: static boxes, no gates, everything visible at rest. */
+body.page-about .scroll-chapter__shutter,
+body.page-about .vibe-gate-btn,
+body.page-about .scroll-chapter__sticky::before,
+body.page-about .scroll-chapter__sticky::after,
+body.page-about .section--journey::after { display: none !important; }
+
+/* Scroll-driven animations hold their `both` fill at frame 0 in print —
+   nothing advances a view timeline on paper, so the whole chapter must be
+   released from them at once. */
+body.page-about .scroll-chapter--impact,
+body.page-about .scroll-chapter--impact *,
+body.page-about .section--journey,
+body.page-about .section--journey * {
+  animation: none !important;
+  animation-timeline: auto !important;
+  view-timeline-name: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+body.page-about .section--impact { padding: 0 !important; }
+
+body.page-about .scroll-chapter--impact { height: auto !important; }
+
+body.page-about .scroll-chapter__sticky {
+  position: static !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+body.page-about .scroll-chapter__sticky .section-container {
+  display: block !important;
+  height: auto !important;
+}
+
+body.page-about .scroll-chapter__heading,
+body.page-about .scroll-chapter__content {
+  position: static !important;
+  inset: auto !important;
+  min-height: 0;
+  margin: 0;
+}
+
+/* The stage sizes its heading and cards against the viewport (svh), which
+   collapses to nothing on paper — fall back to the print type scale. */
+body.page-about .scroll-chapter__heading .section-title {
+  font-size: 14pt;
+  margin-bottom: 8pt;
+}
+
+body.page-about .scroll-chapter__content .story-tile {
+  padding: 5pt 0;
+  gap: 2pt;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+body.page-about .scroll-chapter__content .story-headline,
+body.page-about .scroll-chapter__content .story-tile.featured .story-headline { font-size: 11pt; }
+body.page-about .scroll-chapter__content .story-kicker { font-size: 7pt; }
+body.page-about .scroll-chapter__content .story-deck { font-size: 9pt; }
+body.page-about .scroll-chapter__content .story-meta { font-size: 7pt; padding-top: 1pt; }
+
+/* Journey no longer reaches up into the Impact stage */
+body.page-about .section--journey {
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border-top: none !important;
+  box-shadow: none !important;
+  background: #fff !important;
+}
+
+body.page-about .journey-layout { display: block !important; }
+/* Journey's screen title is a 52–82px display size — on paper it has to be
+   the same 14pt as every other section heading, or it dangles at the foot of
+   a page and pushes the whole timeline onto the next sheet. */
+body.page-about .journey-layout__intro .section-title {
+  font-size: 14pt;
+  margin-bottom: 8pt;
+}
+body.page-about .journey-layout__intro,
+body.page-about .contact-heading { position: static !important; }
