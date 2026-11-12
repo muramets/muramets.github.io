@@ -29,7 +29,7 @@
             "kicker": "Creator & Partner Growth",
             "headline": "Helped 1,000+ creators and artists boost their revenue by up to 50%",
             "deck": "Opened up short-form monetization by pairing the label's audio catalog with creators' visual content on a revenue-share basis.",
-            "meta": "Music Licensing · Creators Engagement"
+            "meta": "Music Licensing · Creator Engagement"
           }
         },
         {
@@ -75,9 +75,9 @@
             "title": "Career Break",
             "company": "<div>Independent</div><div>Remote</div>",
             "period": "07/2025 — Present",
-            "deck": "Stepped away and built where my experience pointed — and watched the map open up with every project. What I found: my track record is a toolkit, not a destination. And the place where the whole toolkit works at once is in making good music get heard and artists get paid.",
+            "deck": "Stepped away and built where my experience pointed — and watched the map open up with every project. What I found: my track record is a toolkit, not a destination. And the place where the whole toolkit works at once is getting good music heard and artists paid.",
             "bullets": [
-              "Built HackTube — a full-cycle production studio for BGM YouTube videos: find the idea, edit, render — inside YouTube's native UI, because&nbsp;the best onboarding is the one the user already finished.",
+              "Built HackTube — a full-cycle production studio for background music (BGM) YouTube videos: find the idea, edit, render — inside YouTube's native UI, because&nbsp;the best onboarding is the one the user already finished.",
               "Built <a href=\"https://monkeylearn.me\" target=\"_blank\">MonkeyLearn</a> — a coaching platform that turns skill-building into routine actions with clear instructions. When you can see the path, you don't lose the goal.",
               "Launched and monetized a BGM YouTube channel in the piano music niche, plus a series of smaller projects exploring what a modern artist's creative process needs today — from reels to community building."
             ]
@@ -122,7 +122,7 @@
             "period": "11/2022 — 07/2023",
             "deck": "Ran A&R and licensing operations, signing independent artists and connecting their music with video projects across platforms.",
             "bullets": [
-              "Scouted and signed independent talent, managing legal contracts, licensing agreements, and promotional campaigns end-to-end.",
+              "Scouted and signed independent talent, managing legal contracts, licensing agreements, and promotional campaigns end to end.",
               "Embedded catalog tracks into video projects, growing revenue on both sides — for the artists and the label.",
               "Onboarded 200+ artists and tripled the label's music catalog at flat operating costs."
             ]
@@ -165,11 +165,11 @@
             "title": "Video Designer",
             "company": "TheSoul Publishing<br>Kazan, Russia",
             "period": "02/2019 — 03/2020",
-            "deck": "<div>My first video job — I came in green, fresh from doing legal support for real-estate deals, and spent a double-length probation being exactly average: the camera just isn't my instrument to play. But I needed to stay in the game, so I decided to close the gap with editing quality and speed.</div>",
+            "deck": "My first video job — I came in green, fresh from doing legal support for real-estate deals, and spent a double-length probation being exactly average: the camera just isn't my instrument to play. But I needed to stay in the game, so I decided to close the gap with editing quality and speed.",
             "bullets": [
-              "<div>Learned Premiere Pro from scratch, every hotkey written out on two A4 sheets I still sentimentally keep — then ran a master class where anyone could race me on the same source files, on a timer. Nobody was faster.</div>",
+              "Learned Premiere Pro from scratch, every hotkey written out on two A4 sheets I still sentimentally keep — then ran a master class where anyone could race me on the same source files, on a timer. Nobody was faster.",
               "Recorded the company's internal video course on editing shortcuts — voice-over on screencast — that colleagues kept asking about long after.",
-              "<div>Wrote, shot, and edited videos for the social media projects, learning every part of the craft on the job — some reached millions of views, some hundreds of millions.</div>"
+              "Wrote, shot, and edited videos for social media projects, learning every part of the craft on the job — some reached millions of views, some hundreds of millions."
             ]
           }
         },
@@ -195,10 +195,9 @@
             "title": "Bachelor of Laws",
             "company": "Kazan State University<div>Kazan, Russia</div>",
             "period": "07/2013 — 07/2017",
-            "deck": "Landed in the right place at the right time, half by accident. Legal theory showed my curiosity what it had been looking for — how systems are built: structures, hierarchies, frameworks. It's always been tough for me to comprehend physics; the laws people wire into the essence of things turned out to be my way into systems thinking.",
+            "deck": "Landed in the right place at the right time, half by accident. Legal theory showed my curiosity what it had been looking for — how systems are built: structures, hierarchies, frameworks. Physics never clicked for me; the laws people write turned out to be my way into systems thinking.",
             "bullets": [
               "One seminar stuck with me: we spent the whole class building the prosecution's side of a high-profile case while the professor took it apart point by point. I didn't see what he was teaching us back then, but do now.",
-              "My first real immersion into an environment that was genuinely interesting — just not my waters.",
               "Graduated with honors."
             ]
           }
@@ -214,15 +213,15 @@
       },
       "/creator-tools.html": {
         "about.status": "COOKING...<br>",
-        "about.deck.past": "Product guy with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly.",
+        "about.deck.past": "Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly.",
         "footer.credit.copy": "© 2026 muramets lab"
       },
       "/collabs.html": {
         "about.status": "COOKING...<br>",
-        "about.deck.past": "Product guy with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly."
+        "about.deck.past": "Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly."
       },
       "/index.html": {
-        "about.status": "COOKING<br>...<br><br><br><br><br>",
+        "about.status": "COOKING...<br>",
         "about.deck.intro": "I help music and the people who make it earn what they deserve.",
         "about.deck.past": "Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly.&nbsp;",
         "about.deck.present": "Now exploring how to be useful in the artist development game — with the skills that got me here, the ones I'm picking up along the way, and the personality that comes with them.",
