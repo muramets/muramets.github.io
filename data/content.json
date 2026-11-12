@@ -28,7 +28,7 @@
             "variant": "uv-border",
             "kicker": "Creator & Partner Growth",
             "headline": "Helped 1,000+ creators and artists boost their revenue by up to 50%",
-            "deck": "Unlocked short-form monetization by pairing the label's audio catalog with creators' visual content on a revenue-share basis.",
+            "deck": "Opened up short-form monetization by pairing the label's audio catalog with creators' visual content on a revenue-share basis.",
             "meta": "Music Licensing · Creators Engagement"
           }
         },
@@ -75,7 +75,7 @@
             "title": "Career Break",
             "company": "<div>Independent</div><div>Remote</div>",
             "period": "07/2025 — 07/2026",
-            "deck": "Stepped away and autonomously built where my experience pointed — and watched the map open up with every project. What I found: my track record is a toolkit, not a destination. And the place where the whole toolkit works at once is in making good music get heard and artists get paid.",
+            "deck": "Stepped away and built where my experience pointed — and watched the map open up with every project. What I found: my track record is a toolkit, not a destination. And the place where the whole toolkit works at once is in making good music get heard and artists get paid.",
             "bullets": [
               "Built HackTube — a full-cycle production studio for BGM YouTube videos: find the idea, edit, render — inside YouTube's native UI, because&nbsp;the best onboarding is the one the user already finished.",
               "Built MonkeyLearn — a coaching platform that turns skill-building into routine actions with clear instructions. When you can see the path, you don't lose the goal.",
@@ -87,13 +87,13 @@
           "id": "role-hop",
           "type": "role",
           "fields": {
-            "title": "Head Of Product",
+            "title": "Head of Product",
             "company": "TheSoul Publishing<br>Remote, Cyprus",
             "period": "01/2025 — 07/2025",
-            "deck": "Owned the product side of music production, distribution, and promotion. Leveraged automation to grow margins and keep creative focus on high-value work.",
+            "deck": "Owned the product side of music production, distribution, and promotion. Used automation to grow margins and keep creative focus on high-value work.",
             "bullets": [
               "Researched and built an end-to-end music production, distribution, and monetization pipeline, boosting artist and creator revenue by up to 50%.",
-              "Consolidated dozens of third-party reports into a central visualization system to spot revenue anomalies and pattern shifts, assisting scaling from 5 to 7 figures.",
+              "Consolidated dozens of third-party reports into a central visualization system to spot revenue anomalies and pattern shifts — the system behind the five-to-seven-figure growth.",
               "Designed internal workflows and process frameworks to merge the teams and infrastructure of two major matrix organizations."
             ]
           }
@@ -135,7 +135,7 @@
             "title": "Creative Producer",
             "company": "TheSoul Publishing<div>Riga, Latvia</div>",
             "period": "07/2021 — 11/2022",
-            "deck": "My first independent people and product management role — and my first English-speaking work environment. I did my best in that setting at that moment, and it kept teaching me long after the page was turned.",
+            "deck": "My first independent people and product management role — and my first English-speaking work environment.",
             "bullets": [
               "Hired and trained a 15+ production crew from scratch and ran it day to day.",
               "Built the production workflow into a repeatable template — by the end, the team could take on almost any video production task within the publisher.",
@@ -169,7 +169,7 @@
             "bullets": [
               "<div>Learned Premiere Pro from scratch, every hotkey written out on two A4 sheets I still sentimentally keep — then ran a master class where anyone could race me on the same source files, on a timer. Nobody was faster.</div>",
               "Recorded the company's internal video course on editing shortcuts — voice-over on screencast — that colleagues kept asking about long after.",
-              "<div>Wrote, shot, and edit videos for the social media projects, learning every part of the craft on the job — some reached millions of views, some hundreds of millions.</div>"
+              "<div>Wrote, shot, and edited videos for the social media projects, learning every part of the craft on the job — some reached millions of views, some hundreds of millions.</div>"
             ]
           }
         },
@@ -213,12 +213,12 @@
         "footer.credit.copy": "© 2026 muramets labs"
       },
       "/creator-tools.html": {
-        "about.status": "COOCKING...<br>",
+        "about.status": "COOKING...<br>",
         "about.deck.past": "Product guy with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly.",
         "footer.credit.copy": "© 2026 muramets labs"
       },
       "/collabs.html": {
-        "about.status": "COOCKING...<br>",
+        "about.status": "COOKING...<br>",
         "about.deck.past": "Product guy with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly."
       },
       "/index.html": {
@@ -231,7 +231,7 @@
         "footer.skills.1": "Just show me your art. Let's talk.",
         "footer.skills.2": "Let's find out how to get it paid.",
         "footer.skills.3": "I built a training program for the skills a pro artist should have.",
-        "footer.skills.4": "I build marketing and promo strategies with execution layer.",
+        "footer.skills.4": "I build marketing and promo strategies — execution layer included.",
         "footer.domains.2": "Business Intelligence",
         "footer.domains.3": "Workflow Automation",
         "footer.domains.4": "Inventory &amp; Sales Operations",
