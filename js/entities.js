@@ -48,9 +48,13 @@ const ROLE_ACCENTS = ['accent-uv', 'accent-mint', 'accent-blue', 'accent-magenta
    07/2025 — 07/2026 year reads "1 year", not "1 year 1 month").
    Returns null when the period doesn't parse — the line is simply omitted. */
 function formatDuration(period) {
-  const m = String(period).match(/(\d{2})\/(\d{4})\s*[—–-]+\s*(\d{2})\/(\d{4})/);
+  const m = String(period).match(/(\d{2})\/(\d{4})\s*[—–-]+\s*(?:(\d{2})\/(\d{4})|(present|now))/i);
   if (!m) return null;
-  const months = (+m[4] - +m[2]) * 12 + (+m[3] - +m[1]);
+  // An open-ended role ("07/2025 — Present") counts up to the current month.
+  const now = new Date();
+  const endMonth = m[5] ? now.getMonth() + 1 : +m[3];
+  const endYear = m[5] ? now.getFullYear() : +m[4];
+  const months = (endYear - +m[2]) * 12 + (endMonth - +m[1]);
   if (months <= 0) return null;
   const years = Math.floor(months / 12);
   const rest = months % 12;
