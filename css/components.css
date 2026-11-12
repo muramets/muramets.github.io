@@ -534,6 +534,13 @@ body.page-about:not(.is-admin) .section--journey > .journey-layout {
   gap: 10px;
 }
 
+/* Inline links inside role copy: the base `a` is unstyled, so mark them. */
+.timeline-body a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
 .timeline-bullets li {
   font-family: var(--font-sans);
   font-size: 14px;

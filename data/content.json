@@ -38,7 +38,7 @@
           "fields": {
             "variant": "",
             "kicker": "Audience & Reach",
-            "headline": "Launched promo campaigns reaching 100M+ views on average",
+            "headline": "Launched promo campaigns averaging 100M+ views per artist release",
             "deck": "Pushed the label's audio catalog into short-form content on two fronts: the publisher's own network of YouTube channels and revenue-share deals with external partners and creators — B2B and B2C alike.",
             "meta": "Short-form Promotion · Growth Marketing"
           }
@@ -49,8 +49,8 @@
           "fields": {
             "variant": "",
             "kicker": "Operations & Speed",
-            "headline": "Made a 100+ member support team 30% faster",
-            "deck": "Implemented operational guides and workflows for a 100+ member support team during merger-driven rapid product scaling.",
+            "headline": "Made a 100+ member support team close tickets 30% faster",
+            "deck": "Distribution ran by hand, ticket by ticket. Reworked the process and built the tools around it — so the team kept up through merger-driven product scaling.",
             "meta": "Ticketing Workflows · Documentation"
           }
         },
@@ -61,7 +61,7 @@
             "variant": "",
             "kicker": "Distribution & Delivery",
             "headline": "Cut manual distribution work by 40%",
-            "deck": "Designed a roadmap for fully automated music distribution across 100+ streaming platforms on an enter-once, reuse-everywhere model.",
+            "deck": "Designed and rolled out the automation roadmap for music distribution across 100+ streaming platforms — enter once, reuse everywhere.",
             "meta": "DDEX Protocol · Automation Roadmap"
           }
         }
@@ -74,11 +74,11 @@
           "fields": {
             "title": "Career Break",
             "company": "<div>Independent</div><div>Remote</div>",
-            "period": "07/2025 — 07/2026",
+            "period": "07/2025 — Present",
             "deck": "Stepped away and built where my experience pointed — and watched the map open up with every project. What I found: my track record is a toolkit, not a destination. And the place where the whole toolkit works at once is in making good music get heard and artists get paid.",
             "bullets": [
               "Built HackTube — a full-cycle production studio for BGM YouTube videos: find the idea, edit, render — inside YouTube's native UI, because&nbsp;the best onboarding is the one the user already finished.",
-              "Built MonkeyLearn — a coaching platform that turns skill-building into routine actions with clear instructions. When you can see the path, you don't lose the goal.",
+              "Built <a href=\"https://monkeylearn.me\" target=\"_blank\">MonkeyLearn</a> — a coaching platform that turns skill-building into routine actions with clear instructions. When you can see the path, you don't lose the goal.",
               "Launched and monetized a BGM YouTube channel in the Slow Life Piano niche, plus a series of smaller projects exploring what a modern artist's creative process needs today — from reels to community building."
             ]
           }
@@ -182,8 +182,8 @@
             "period": "09/2017 — 09/2019",
             "deck": "Honest take: I took this degree to buy myself two more student years. The braver me would have spent them on audio engineering, the old dream — I just couldn't see that door back then. Still:",
             "bullets": [
-              "Practice showed me that law isn't my passion — in a music setting it kind of is, but as a supporting role, not the lead (a note from today).",
-              "Played the cards I had by a simple rule: better odds starting the search for myself in the creative field than in any legal job I was ready to see back then.",
+              "Practice showed me that law isn't my thing — in a music setting it kind of is, but as a supporting role, not the lead (a note from today).",
+              "Played the cards I had by a simple rule: if I had to start looking for myself somewhere, a creative job gave me better odds than a legal one.",
               "Graduated with honors."
             ]
           }
@@ -198,7 +198,7 @@
             "deck": "Landed in the right place at the right time, half by accident. Legal theory showed my curiosity what it had been looking for — how systems are built: structures, hierarchies, frameworks. It's always been tough for me to comprehend physics; the laws people wire into the essence of things turned out to be my way into systems thinking.",
             "bullets": [
               "One seminar stuck with me: we spent the whole class building the prosecution's side of a high-profile case while the professor took it apart point by point. I didn't see what he was teaching us back then, but do now.",
-              "My first real immersion into an environment that was genuinely interesting — just not my waters. I ran on default mode: executing for grades rather than for knowledge.",
+              "My first real immersion into an environment that was genuinely interesting — just not my waters.",
               "Graduated with honors."
             ]
           }
@@ -210,12 +210,12 @@
   "texts": {
     "default": {
       "/skillsets.html": {
-        "footer.credit.copy": "© 2026 muramets labs"
+        "footer.credit.copy": "© 2026 muramets lab"
       },
       "/creator-tools.html": {
         "about.status": "COOKING...<br>",
         "about.deck.past": "Product guy with a proven record of turning raw data into monetization engines and scaling business revenue from five to seven figures monthly.",
-        "footer.credit.copy": "© 2026 muramets labs"
+        "footer.credit.copy": "© 2026 muramets lab"
       },
       "/collabs.html": {
         "about.status": "COOKING...<br>",
@@ -226,7 +226,7 @@
         "about.deck.intro": "I help music and the people who make it earn what they deserve.",
         "about.deck.past": "Product guy with a proven record of turning data into monetization engines and scaling business revenue from five to seven figures monthly.&nbsp;",
         "about.deck.present": "Now exploring how to be useful in the artist development game — with the skills that got me here, the ones I'm picking up along the way, and the personality that comes with them.",
-        "footer.credit.copy": "© 2026 muramets labs",
+        "footer.credit.copy": "© 2026 muramets lab",
         "footer.domains.title": "IF YOU ARE CORPORATE",
         "footer.skills.1": "Just show me your art. Let's talk.",
         "footer.skills.2": "Let's find out how to get it paid.",
